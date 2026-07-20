@@ -53,64 +53,494 @@ LOOKBACK_OPTIONS = {
 # =========================================================
 st.markdown(
     """
-    <style>
-    .main-title {
-        font-size: 2.25rem;
-        font-weight: 850;
-        margin-bottom: 0.15rem;
-    }
+<style>
+:root {
+    --up-color: #e53935;
+    --down-color: #1565c0;
+    --sidebar-text: #ffffff;
+    --sidebar-muted: rgba(255, 255, 255, 0.72);
+}
 
-    .subtitle {
-        color: #777777;
-        margin-bottom: 1.35rem;
-    }
+html,
+body,
+[data-testid="stAppViewContainer"] {
+    background:
+        linear-gradient(
+            180deg,
+            #fbfcff 0%,
+            #f4f6fb 100%
+        );
+}
 
-    .forecast-card {
-        border: 1px solid rgba(128, 128, 128, 0.25);
-        border-radius: 15px;
-        padding: 18px;
-        min-height: 175px;
-        background-color: rgba(128, 128, 128, 0.04);
-        margin-bottom: 14px;
-    }
+[data-testid="stHeader"] {
+    background: transparent;
+}
 
-    .forecast-name {
-        font-size: 1.05rem;
-        font-weight: 800;
-    }
+/* 사이드바 내부 구성 순서 */
+[data-testid="stSidebarContent"] {
+    display: flex !important;
+    flex-direction: column !important;
+}
 
-    .forecast-ticker {
-        color: #888888;
-        font-size: 0.78rem;
-        margin-bottom: 12px;
-    }
+/* 네비게이션 6개를 사이드바 맨 위에 배치 */
+[data-testid="stSidebarNav"] {
+    display: block !important;
+    order: 1 !important;
+    margin-top: 6px;
+    margin-bottom: 14px;
+}
 
-    .forecast-price {
-        font-size: 1.45rem;
-        font-weight: 850;
-        margin-bottom: 5px;
-    }
+/* 회사 정보와 예측 설정은 네비게이션 다음에 배치 */
+[data-testid="stSidebarUserContent"] {
+    order: 2 !important;
+}
 
-    .forecast-label {
-        font-size: 0.78rem;
-        color: #777777;
-        margin-top: 7px;
-    }
+/* 사이드바 전체 그라데이션 */
+[data-testid="stSidebar"] {
+    background:
+        radial-gradient(
+            circle at 20% 10%,
+            rgba(255, 104, 132, 0.36),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 85% 24%,
+            rgba(94, 125, 255, 0.38),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 22% 82%,
+            rgba(255, 71, 87, 0.30),
+            transparent 26%
+        ),
+        linear-gradient(
+            165deg,
+            #091536 0%,
+            #132b68 30%,
+            #34319a 58%,
+            #732e9e 78%,
+            #bf344e 100%
+        ) !important;
+    border-right:
+        1px solid rgba(255, 255, 255, 0.16);
+}
 
-    .analysis-box {
-        border-left: 5px solid #777777;
-        padding: 13px 16px;
-        border-radius: 8px;
-        background-color: rgba(128, 128, 128, 0.07);
-        margin: 10px 0 15px 0;
-    }
+[data-testid="stSidebar"] > div:first-child {
+    display: flex;
+    flex-direction: column;
+    background: transparent !important;
+}
 
-    div[data-testid="stMetric"] {
-        border: 1px solid rgba(128, 128, 128, 0.22);
-        border-radius: 13px;
-        padding: 12px;
-    }
-    </style>
+[data-testid="stSidebar"]
+[data-testid="stMarkdownContainer"],
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] span {
+    color: var(--sidebar-text);
+}
+
+/* 입력 위젯은 밝게 표시 */
+[data-testid="stSidebar"]
+[data-baseweb="select"] > div,
+[data-testid="stSidebar"]
+[data-baseweb="input"] > div,
+[data-testid="stSidebar"]
+div[role="radiogroup"] {
+    background:
+        rgba(255, 255, 255, 0.94);
+    border:
+        1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 12px;
+}
+
+[data-testid="stSidebar"]
+[data-baseweb="select"] span,
+[data-testid="stSidebar"]
+[data-baseweb="select"] svg,
+[data-testid="stSidebar"]
+[data-baseweb="input"] input,
+[data-testid="stSidebar"]
+div[role="radiogroup"] label p {
+    color: #17213d !important;
+}
+
+[data-testid="stSidebar"] hr {
+    border-color:
+        rgba(255, 255, 255, 0.20);
+}
+
+/* hani.inc 브랜드 카드 */
+.hani-brand {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    padding: 18px;
+    margin: 0 0 15px 0;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.18) 0%,
+            rgba(255, 255, 255, 0.07) 100%
+        );
+    border:
+        1px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+        0 18px 36px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(16px);
+}
+
+.hani-brand::before {
+    content: "";
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    right: -88px;
+    top: -98px;
+    border-radius: 50%;
+    background:
+        radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.40) 0%,
+            rgba(255, 255, 255, 0.02) 68%
+        );
+}
+
+.hani-brand::after {
+    content: "";
+    position: absolute;
+    width: 125px;
+    height: 125px;
+    left: -65px;
+    bottom: -74px;
+    border-radius: 40px;
+    transform: rotate(30deg);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 73, 104, 0.75),
+            rgba(255, 171, 86, 0.14)
+        );
+}
+
+.hani-brand-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.hani-logo-shell {
+    width: 70px;
+    height: 70px;
+    min-width: 70px;
+    border-radius: 21px;
+    padding: 1px;
+    background:
+        linear-gradient(
+            135deg,
+            #ff4d67 0%,
+            #ffae57 35%,
+            #765cff 68%,
+            #3f7cff 100%
+        );
+    box-shadow:
+        0 13px 28px rgba(0, 0, 0, 0.30),
+        0 0 24px rgba(122, 92, 255, 0.30);
+}
+
+.hani-logo-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.24),
+            rgba(255, 255, 255, 0.07)
+        );
+    border:
+        1px solid rgba(255, 255, 255, 0.24);
+}
+
+.hani-logo-inner svg {
+    width: 55px;
+    height: 55px;
+    filter:
+        drop-shadow(
+            0 4px 8px rgba(0, 0, 0, 0.24)
+        );
+}
+
+.hani-brand-name {
+    color: #ffffff;
+    font-size: 1.55rem;
+    line-height: 1.04;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+}
+
+.hani-brand-subtitle {
+    color:
+        rgba(255, 255, 255, 0.75);
+    font-size: 0.67rem;
+    line-height: 1.3;
+    margin-top: 5px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+}
+
+.hani-brand-line {
+    position: relative;
+    z-index: 2;
+    height: 1px;
+    margin: 15px 0 11px 0;
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.48),
+            transparent
+        );
+}
+
+.hani-brand-copy {
+    position: relative;
+    z-index: 2;
+    color:
+        rgba(255, 255, 255, 0.79);
+    font-size: 0.73rem;
+    line-height: 1.5;
+}
+
+/* 기본 페이지 메뉴 디자인 */
+[data-testid="stSidebarNav"]::before {
+    content: "NAVIGATION";
+    display: block;
+    margin: 2px 0 8px 4px;
+    color:
+        rgba(255, 255, 255, 0.70);
+    font-size: 0.70rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+[data-testid="stSidebarNav"] ul {
+    padding-left: 0;
+}
+
+[data-testid="stSidebarNav"] li {
+    margin-bottom: 4px;
+}
+
+[data-testid="stSidebarNav"] a {
+    border-radius: 13px;
+    padding: 9px 11px;
+    background:
+        rgba(255, 255, 255, 0.075);
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
+    transition:
+        all 0.18s ease;
+}
+
+[data-testid="stSidebarNav"] a:hover {
+    background:
+        rgba(255, 255, 255, 0.18);
+    border-color:
+        rgba(255, 255, 255, 0.28);
+    transform:
+        translateX(3px);
+}
+
+[data-testid="stSidebarNav"]
+a[aria-current="page"] {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(239, 62, 74, 0.48),
+            rgba(108, 99, 255, 0.48),
+            rgba(21, 101, 192, 0.48)
+        );
+    border-color:
+        rgba(255, 255, 255, 0.30);
+    box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+[data-testid="stSidebarNav"] a span,
+[data-testid="stSidebarNav"] a p {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.sidebar-settings-title {
+    color: #ffffff;
+    font-size: 1.24rem;
+    font-weight: 850;
+    margin: 18px 0 10px 0;
+}
+
+/* 본문 */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.main-title {
+    font-size: 2.25rem;
+    font-weight: 850;
+    margin-bottom: 0.15rem;
+    color: #18213d;
+}
+
+.subtitle {
+    color: #667085;
+    margin-bottom: 1.35rem;
+}
+
+.forecast-card {
+    border:
+        1px solid rgba(128, 128, 128, 0.18);
+    border-radius: 18px;
+    padding: 18px;
+    min-height: 175px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.96),
+            rgba(243, 247, 255, 0.92)
+        );
+    box-shadow:
+        0 12px 26px rgba(74, 96, 170, 0.09);
+    margin-bottom: 14px;
+}
+
+.forecast-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #18213d;
+}
+
+.forecast-ticker {
+    color: #888888;
+    font-size: 0.78rem;
+    margin-bottom: 12px;
+}
+
+.forecast-price {
+    font-size: 1.45rem;
+    font-weight: 850;
+    margin-bottom: 5px;
+}
+
+.forecast-label {
+    font-size: 0.78rem;
+    color: #777777;
+    margin-top: 7px;
+}
+
+.analysis-box {
+    border-left: 5px solid #6c63ff;
+    padding: 13px 16px;
+    border-radius: 8px;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(108, 99, 255, 0.08),
+            rgba(21, 101, 192, 0.04)
+        );
+    margin: 10px 0 15px 0;
+}
+
+div[data-testid="stMetric"] {
+    border:
+        1px solid rgba(128, 128, 128, 0.16);
+    border-radius: 15px;
+    padding: 12px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.94),
+            rgba(245, 248, 255, 0.90)
+        );
+    box-shadow:
+        0 8px 20px rgba(80, 95, 150, 0.06);
+}
+
+[data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+[data-baseweb="tab"] {
+    background:
+        rgba(255, 255, 255, 0.78);
+    border-radius: 999px;
+    padding: 10px 18px;
+    border:
+        1px solid rgba(140, 160, 210, 0.14);
+}
+
+[data-baseweb="tab"][aria-selected="true"] {
+    background:
+        linear-gradient(
+            90deg,
+            #e53935 0%,
+            #6c63ff 54%,
+            #1565c0 100%
+        );
+    color: white;
+}
+
+/* 네비게이션 6개 메뉴 앞 이모지 */
+[data-testid="stSidebarNav"] li:nth-child(1) a::before {
+    content: "📊";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(2) a::before {
+    content: "🧠";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(3) a::before {
+    content: "🔮";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(4) a::before {
+    content: "📅";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(5) a::before {
+    content: "🗓️";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(6) a::before {
+    content: "🏆";
+}
+
+[data-testid="stSidebarNav"] li a::before {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    margin-right: 0.35rem;
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+[data-testid="stSidebarNav"] li a {
+    display: flex !important;
+    align-items: center !important;
+}
+
+</style>
     """,
     unsafe_allow_html=True,
 )
@@ -781,7 +1211,82 @@ st.markdown(
 # 사이드바
 # =========================================================
 with st.sidebar:
-    st.header("내일 주가 예상 설정")
+    st.markdown(
+        '<div class="hani-brand-wrapper">',
+        unsafe_allow_html=True,
+    )
+
+    brand_html = (
+        '<div class="hani-brand">'
+        '<div class="hani-brand-row">'
+        '<div class="hani-logo-shell">'
+        '<div class="hani-logo-inner">'
+        '<svg viewBox="0 0 100 100" '
+        'xmlns="http://www.w3.org/2000/svg" '
+        'aria-label="hani.inc logo">'
+        '<defs>'
+        '<linearGradient id="logoStrokeTomorrow" '
+        'x1="0%" y1="0%" x2="100%" y2="100%">'
+        '<stop offset="0%" stop-color="#ffffff"/>'
+        '<stop offset="100%" stop-color="#dbe8ff"/>'
+        '</linearGradient>'
+        '</defs>'
+        '<path d="M20 72V28M20 51H46M46 28V72" '
+        'fill="none" '
+        'stroke="url(#logoStrokeTomorrow)" '
+        'stroke-width="9" '
+        'stroke-linecap="round" '
+        'stroke-linejoin="round"/>'
+        '<path d="M58 69L68 55L77 61L89 40" '
+        'fill="none" '
+        'stroke="#ffffff" '
+        'stroke-width="6" '
+        'stroke-linecap="round" '
+        'stroke-linejoin="round"/>'
+        '<circle cx="89" cy="40" r="5" '
+        'fill="#ffdf7e"/>'
+        '<circle cx="68" cy="55" r="4" '
+        'fill="#ff7b91"/>'
+        '</svg>'
+        '</div>'
+        '</div>'
+        '<div>'
+        '<div class="hani-brand-name">hani.inc</div>'
+        '<div class="hani-brand-subtitle">'
+        'MARKET INTELLIGENCE<br>'
+        'DATA &amp; ANALYTICS'
+        '</div>'
+        '</div>'
+        '</div>'
+        '<div class="hani-brand-line"></div>'
+        '<div class="hani-brand-copy">'
+        '시장 흐름과 기술지표를 바탕으로<br>'
+        '다음 거래일을 분석하는 예측 대시보드'
+        '</div>'
+        '</div>'
+    )
+
+    st.markdown(
+        brand_html,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="sidebar-settings-wrapper">',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="sidebar-settings-title">'
+        '내일 주가 예상 설정'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
     market_options = [
         "전체",
@@ -796,12 +1301,16 @@ with st.sidebar:
     )
 
     if selected_market == "전체":
-        available_stocks = list(STOCKS.keys())
+        available_stocks = list(
+            STOCKS.keys()
+        )
     else:
         available_stocks = [
             name
-            for name, information in STOCKS.items()
-            if information["market"] == selected_market
+            for name, information
+            in STOCKS.items()
+            if information["market"]
+            == selected_market
         ]
 
     selected_stock = st.selectbox(
@@ -825,7 +1334,13 @@ with st.sidebar:
         st.rerun()
 
     st.caption(
-        "이 페이지의 예상값은 통계적 참고치이며 실제 내일 주가를 보장하지 않습니다."
+        "예상값은 과거 가격 데이터를 이용한 "
+        "통계적 참고치이며 실제 주가를 보장하지 않습니다."
+    )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True,
     )
 
 
