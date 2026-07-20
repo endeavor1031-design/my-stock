@@ -162,10 +162,11 @@ st.markdown(
     <style>
     html, body, [data-testid="stAppViewContainer"] {
         background:
-            radial-gradient(circle at 12% 18%, rgba(255, 85, 120, 0.16), transparent 22%),
-            radial-gradient(circle at 88% 16%, rgba(72, 120, 255, 0.16), transparent 24%),
-            radial-gradient(circle at 78% 72%, rgba(131, 56, 236, 0.12), transparent 22%),
-            linear-gradient(135deg, #f8fbff 0%, #eef4ff 38%, #f8f3ff 100%);
+            linear-gradient(
+                180deg,
+                #fbfcff 0%,
+                #f5f7fb 100%
+            );
     }
 
     [data-testid="stHeader"] {
@@ -188,168 +189,161 @@ st.markdown(
         padding-bottom: 2rem;
     }
 
-    .hero-wrap {
+    .sidebar-brand {
         position: relative;
         overflow: hidden;
-        border-radius: 26px;
-        padding: 28px 30px;
-        margin-bottom: 22px;
+        border-radius: 22px;
+        padding: 20px 16px;
+        margin: 4px 0 22px 0;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(17, 24, 64, 0.98) 0%,
+                rgba(58, 74, 180, 0.96) 52%,
+                rgba(117, 53, 198, 0.94) 100%
+            );
+        box-shadow: 0 16px 30px rgba(45, 60, 145, 0.23);
+        border: 1px solid rgba(255,255,255,0.13);
+    }
+
+    .sidebar-brand::before {
+        content: "";
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        right: -65px;
+        top: -65px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(255,255,255,0.30),
+                rgba(255,255,255,0.02) 70%
+            );
+    }
+
+    .sidebar-brand::after {
+        content: "";
+        position: absolute;
+        width: 115px;
+        height: 115px;
+        left: -50px;
+        bottom: -55px;
+        border-radius: 35px;
+        transform: rotate(28deg);
         background:
             linear-gradient(
                 135deg,
-                rgba(16, 24, 64, 0.95) 0%,
-                rgba(53, 72, 171, 0.92) 45%,
-                rgba(108, 54, 194, 0.90) 100%
+                rgba(255, 86, 125, 0.36),
+                rgba(255, 195, 113, 0.10)
             );
-        box-shadow: 0 20px 42px rgba(43, 63, 140, 0.20);
-        border: 1px solid rgba(255,255,255,0.12);
     }
 
-    .hero-wrap::before {
-        content: "";
-        position: absolute;
-        width: 280px;
-        height: 280px;
-        right: -90px;
-        top: -90px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.22), rgba(255,255,255,0.02));
-    }
-
-    .hero-wrap::after {
-        content: "";
-        position: absolute;
-        width: 240px;
-        height: 240px;
-        left: -70px;
-        bottom: -70px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 99, 132, 0.18), rgba(255,255,255,0.02));
-    }
-
-    .hero-topline {
-        color: rgba(255,255,255,0.80);
-        font-size: 0.95rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-    }
-
-    .hero-grid {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        flex-wrap: wrap;
+    .sidebar-logo-row {
         position: relative;
         z-index: 2;
-    }
-
-    .brand-wrap {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
     }
 
-    .brand-logo {
-        width: 78px;
-        height: 78px;
-        border-radius: 22px;
+    .sidebar-logo {
         position: relative;
-        background:
-            linear-gradient(135deg, #ff5f6d 0%, #ffc371 45%, #6c63ff 100%);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+        width: 58px;
+        height: 58px;
         flex-shrink: 0;
+        border-radius: 17px;
+        background:
+            linear-gradient(
+                135deg,
+                #ff5f6d 0%,
+                #ffc371 42%,
+                #6c63ff 100%
+            );
+        box-shadow: 0 10px 24px rgba(0,0,0,0.23);
     }
 
-    .brand-logo::before {
+    .sidebar-logo::before {
         content: "";
         position: absolute;
-        inset: 10px;
-        border-radius: 16px;
-        background: rgba(255,255,255,0.18);
-        backdrop-filter: blur(6px);
+        inset: 8px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.17);
+        border: 1px solid rgba(255,255,255,0.18);
     }
 
-    .brand-logo::after {
+    .sidebar-logo::after {
         content: "h";
         position: absolute;
         inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.35rem;
-        font-weight: 900;
         color: white;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.20);
+        font-size: 1.85rem;
+        font-weight: 900;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.20);
     }
 
-    .brand-text {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-    .brand-name {
-        font-size: 2.25rem;
+    .sidebar-company {
+        color: white;
+        font-size: 1.42rem;
         line-height: 1.05;
         font-weight: 900;
-        color: #ffffff;
-        margin: 0;
+        letter-spacing: -0.02em;
     }
 
-    .brand-sub {
-        color: rgba(255,255,255,0.76);
-        font-size: 0.98rem;
-        margin: 0;
+    .sidebar-company-sub {
+        margin-top: 4px;
+        color: rgba(255,255,255,0.72);
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.02em;
     }
 
-    .hero-badges {
+    .sidebar-divider-line {
+        position: relative;
+        z-index: 2;
+        height: 1px;
+        margin: 15px 0 12px 0;
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.38),
+                transparent
+            );
+    }
+
+    .sidebar-badges {
+        position: relative;
+        z-index: 2;
         display: flex;
-        gap: 10px;
+        gap: 6px;
         flex-wrap: wrap;
-        margin-top: 14px;
     }
 
-    .hero-badge {
-        padding: 8px 14px;
+    .sidebar-badge {
+        padding: 5px 8px;
         border-radius: 999px;
         color: white;
-        font-size: 0.84rem;
+        font-size: 0.65rem;
         font-weight: 700;
-        border: 1px solid rgba(255,255,255,0.16);
-        background: rgba(255,255,255,0.10);
-        backdrop-filter: blur(8px);
+        background: rgba(255,255,255,0.11);
+        border: 1px solid rgba(255,255,255,0.15);
+        backdrop-filter: blur(7px);
     }
 
-    .hero-stats {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 850;
+        margin-bottom: 0.15rem;
+        color: #18213d;
     }
 
-    .hero-stat-box {
-        min-width: 138px;
-        padding: 14px 15px;
-        border-radius: 18px;
-        color: white;
-        background: rgba(255,255,255,0.10);
-        border: 1px solid rgba(255,255,255,0.16);
-        backdrop-filter: blur(10px);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
-    }
-
-    .hero-stat-label {
-        font-size: 0.80rem;
-        color: rgba(255,255,255,0.70);
-        margin-bottom: 4px;
-    }
-
-    .hero-stat-value {
-        font-size: 1.18rem;
-        font-weight: 800;
-        color: #ffffff;
+    .sub-title {
+        color: #667085;
+        margin-bottom: 1.4rem;
     }
 
     .panel-card {
@@ -1053,51 +1047,17 @@ def create_performance_table(close_data, ticker_to_name):
 
 
 # =========================================================
-# 헤더
+# 본문 제목
 # =========================================================
 st.markdown(
-    """
-    <div class="hero-wrap">
-        <div class="hero-topline">hani.inc · premium market intelligence</div>
+    '<div class="main-title">📈 글로벌 주요 주식 대시보드</div>',
+    unsafe_allow_html=True,
+)
 
-        <div class="hero-grid">
-            <div>
-                <div class="brand-wrap">
-                    <div class="brand-logo"></div>
-
-                    <div class="brand-text">
-                        <div class="brand-name">hani.inc</div>
-                        <div class="brand-sub">
-                            글로벌 주요 주식 대시보드 · Yahoo Finance + Plotly 기반 스마트 분석
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hero-badges">
-                    <div class="hero-badge">Global Equities</div>
-                    <div class="hero-badge">AI Stocks</div>
-                    <div class="hero-badge">Market Monitoring</div>
-                    <div class="hero-badge">Interactive Analytics</div>
-                </div>
-            </div>
-
-            <div class="hero-stats">
-                <div class="hero-stat-box">
-                    <div class="hero-stat-label">Tracked Assets</div>
-                    <div class="hero-stat-value">20+</div>
-                </div>
-                <div class="hero-stat-box">
-                    <div class="hero-stat-label">Core Markets</div>
-                    <div class="hero-stat-value">KR · US · JP · EU</div>
-                </div>
-                <div class="hero-stat-box">
-                    <div class="hero-stat-label">Dashboard Style</div>
-                    <div class="hero-stat-value">Gradient Glass</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    """,
+st.markdown(
+    '<div class="sub-title">'
+    'Yahoo Finance 데이터와 Plotly를 활용한 글로벌 금융시장 분석'
+    '</div>',
     unsafe_allow_html=True,
 )
 
@@ -1106,6 +1066,31 @@ st.markdown(
 # 사이드바
 # =========================================================
 with st.sidebar:
+    st.markdown(
+        """
+        <div class="sidebar-brand">
+            <div class="sidebar-logo-row">
+                <div class="sidebar-logo"></div>
+                <div>
+                    <div class="sidebar-company">hani.inc</div>
+                    <div class="sidebar-company-sub">
+                        MARKET INTELLIGENCE
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-divider-line"></div>
+
+            <div class="sidebar-badges">
+                <div class="sidebar-badge">GLOBAL</div>
+                <div class="sidebar-badge">STOCKS</div>
+                <div class="sidebar-badge">ANALYTICS</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.header("대시보드 설정")
 
     market_options = ["전체"] + sorted(
