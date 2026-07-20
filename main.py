@@ -177,29 +177,30 @@ body,
     background: transparent;
 }
 
-/* 기본 Streamlit 멀티페이지 메뉴 유지 */
-[data-testid="stSidebarNav"] {
-    display: block !important;
-    order: 2;
-    margin-top: 8px;
-    margin-bottom: 12px;
+/* 사이드바 내부 구성 순서 */
+[data-testid="stSidebarContent"] {
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-/* 사이드바 내부를 순서 조정 가능한 세로 레이아웃으로 구성 */
+/* 네비게이션을 사이드바 맨 위에 배치 */
+[data-testid="stSidebarNav"] {
+    display: block !important;
+    order: 1 !important;
+    margin-top: 6px;
+    margin-bottom: 14px;
+}
+
+/* 회사 정보와 설정을 네비게이션 다음에 배치 */
+[data-testid="stSidebarUserContent"] {
+    order: 2 !important;
+}
+
+/* 구버전 Streamlit 구조 대응 */
 [data-testid="stSidebar"] > div:first-child {
     display: flex;
     flex-direction: column;
     background: transparent !important;
-}
-
-/* 브랜드 영역은 가장 위 */
-[data-testid="stSidebar"] .hani-brand-wrapper {
-    order: 1;
-}
-
-/* 브랜드 아래의 일반 설정 영역 */
-[data-testid="stSidebar"] .sidebar-settings-wrapper {
-    order: 3;
 }
 
 /* 사이드바 전체 그라데이션 */
@@ -550,6 +551,48 @@ div[data-testid="stMetric"] {
 [data-testid="stSidebarNav"] a p {
     color: #ffffff !important;
     font-weight: 700 !important;
+}
+
+
+/* 네비게이션 메뉴별 이모지 */
+[data-testid="stSidebarNav"] li:nth-child(1) a::before {
+    content: "📊";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(2) a::before {
+    content: "🧠";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(3) a::before {
+    content: "🔮";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(4) a::before {
+    content: "📅";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(5) a::before {
+    content: "🗓️";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(6) a::before {
+    content: "🏆";
+}
+
+[data-testid="stSidebarNav"] li a::before {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    margin-right: 0.35rem;
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+[data-testid="stSidebarNav"] li a {
+    display: flex !important;
+    align-items: center !important;
 }
 
 </style>
