@@ -989,57 +989,33 @@ def show_rank_card(
 ):
     currency = row["통화"]
 
+    html = (
+        f'<div class="rank-card">'
+        f'<div class="rank-number">추천 관심도 {rank}위</div>'
+        f'<div class="rank-name">{row["종목"]}</div>'
+        f'<div class="rank-ticker">{row["티커"]} · {row["분류"]}</div>'
+        f'<div class="rank-score" style="color:{row["등급색"]};">'
+        f'{row["점수"]:.1f}점'
+        f'</div>'
+        f'<div style="color:{row["등급색"]}; font-weight:750;">'
+        f'{row["등급"]}'
+        f'</div>'
+        f'<div style="margin-top:8px;">'
+        f'현재가: <strong>{format_price(row["현재가"], currency)}</strong>'
+        f'</div>'
+        f'<div>'
+        f'1주: <strong>{row["5거래일 예상수익률(%)"]:+.2f}%</strong>'
+        f' · '
+        f'1달: <strong>{row["20거래일 예상수익률(%)"]:+.2f}%</strong>'
+        f'</div>'
+        f'<div class="tag">'
+        f'변동성 {row["일간 변동성(%)"]:.2f}%'
+        f'</div>'
+        f'</div>'
+    )
+
     st.markdown(
-        f"""
-        <div class="rank-card">
-            <div class="rank-number">
-                추천 관심도 {rank}위
-            </div>
-
-            <div class="rank-name">
-                {row["종목"]}
-            </div>
-
-            <div class="rank-ticker">
-                {row["티커"]} · {row["분류"]}
-            </div>
-
-            <div
-                class="rank-score"
-                style="color:{row["등급색"]};"
-            >
-                {row["점수"]:.1f}점
-            </div>
-
-            <div
-                style="color:{row["등급색"]}; font-weight:750;"
-            >
-                {row["등급"]}
-            </div>
-
-            <div style="margin-top:8px;">
-                현재가:
-                <strong>
-                    {format_price(row["현재가"], currency)}
-                </strong>
-            </div>
-
-            <div>
-                1주:
-                <strong>
-                    {row["5거래일 예상수익률(%)"]:+.2f}%
-                </strong>
-                · 1달:
-                <strong>
-                    {row["20거래일 예상수익률(%)"]:+.2f}%
-                </strong>
-            </div>
-
-            <div class="tag">
-                변동성 {row["일간 변동성(%)"]:.2f}%
-            </div>
-        </div>
-        """,
+        html,
         unsafe_allow_html=True,
     )
 
