@@ -192,12 +192,23 @@ body,
     background: transparent;
 }
 
-/* 기본 멀티페이지 메뉴 유지 */
+/* 사이드바 내부 구성 순서 */
+[data-testid="stSidebarContent"] {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* 네비게이션 6개를 사이드바 맨 위에 배치 */
 [data-testid="stSidebarNav"] {
     display: block !important;
-    order: 2;
-    margin-top: 8px;
-    margin-bottom: 12px;
+    order: 1 !important;
+    margin-top: 6px;
+    margin-bottom: 14px;
+}
+
+/* 회사 정보와 분석 설정은 네비게이션 다음에 배치 */
+[data-testid="stSidebarUserContent"] {
+    order: 2 !important;
 }
 
 /* 사이드바 전체 */
@@ -234,16 +245,6 @@ body,
     display: flex;
     flex-direction: column;
     background: transparent !important;
-}
-
-/* 브랜드 영역을 가장 위에 표시 */
-[data-testid="stSidebar"] .hani-brand-wrapper {
-    order: 1;
-}
-
-/* 설정 영역은 기본 페이지 메뉴 아래 */
-[data-testid="stSidebar"] .sidebar-settings-wrapper {
-    order: 3;
 }
 
 [data-testid="stSidebar"]
@@ -618,6 +619,48 @@ div[data-testid="stMetric"] {
         );
     color: white;
 }
+
+/* 네비게이션 6개 메뉴 앞 이모지 */
+[data-testid="stSidebarNav"] li:nth-child(1) a::before {
+    content: "📊";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(2) a::before {
+    content: "🧠";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(3) a::before {
+    content: "🔮";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(4) a::before {
+    content: "📅";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(5) a::before {
+    content: "🗓️";
+}
+
+[data-testid="stSidebarNav"] li:nth-child(6) a::before {
+    content: "🏆";
+}
+
+[data-testid="stSidebarNav"] li a::before {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    margin-right: 0.35rem;
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+[data-testid="stSidebarNav"] li a {
+    display: flex !important;
+    align-items: center !important;
+}
+
 </style>
     """,
     unsafe_allow_html=True,
