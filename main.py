@@ -178,6 +178,32 @@ st.markdown(
         margin-bottom: 10px;
     }
 
+    .price-metric-card {
+        border: 1px solid rgba(128, 128, 128, 0.20);
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 112px;
+        margin-bottom: 10px;
+        background-color: rgba(128, 128, 128, 0.03);
+    }
+
+    .price-metric-label {
+        font-size: 0.88rem;
+        color: #777777;
+        margin-bottom: 7px;
+    }
+
+    .price-metric-value {
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .price-metric-delta {
+        font-size: 0.88rem;
+        font-weight: 750;
+    }
+
     div[data-testid="stMetric"] {
         border: 1px solid rgba(128, 128, 128, 0.20);
         border-radius: 12px;
@@ -297,6 +323,59 @@ def format_price(value, currency):
         return f"¥{value:,.0f}"
 
     return f"${value:,.2f}"
+
+
+def show_colored_price_metric(
+    label,
+    value,
+    change=None,
+    change_percent=None,
+):
+    """
+    한국 주식시장 색상 기준:
+    상승 = 빨간색
+    하락 = 파란색
+    보합 = 회색
+    """
+    if change_percent is None:
+        color = "#777777"
+        arrow = "―"
+        delta_text = ""
+    elif change_percent > 0:
+        color = "#e53935"
+        arrow = "▲"
+        delta_text = (
+            f"{arrow} {abs(change):,.2f} "
+            f"({abs(change_percent):.2f}%)"
+        )
+    elif change_percent < 0:
+        color = "#1565c0"
+        arrow = "▼"
+        delta_text = (
+            f"{arrow} {abs(change):,.2f} "
+            f"({abs(change_percent):.2f}%)"
+        )
+    else:
+        color = "#777777"
+        arrow = "―"
+        delta_text = (
+            f"{arrow} 0.00 (0.00%)"
+        )
+
+    html = (
+        f'<div class="price-metric-card">'
+        f'<div class="price-metric-label">{label}</div>'
+        f'<div class="price-metric-value">{value}</div>'
+        f'<div class="price-metric-delta" style="color:{color};">'
+        f'{delta_text}'
+        f'</div>'
+        f'</div>'
+    )
+
+    st.markdown(
+        html,
+        unsafe_allow_html=True,
+    )
 
 
 def format_large_number(value, currency=""):
@@ -436,8 +515,10 @@ def create_price_chart(
                 low=chart_data["Low"],
                 close=chart_data["Close"],
                 name="OHLC",
-                increasing_line_color="#ef5350",
-                decreasing_line_color="#1565c0", 
+                increasing_line_color="#e53935",
+                increasing_fillcolor="#e53935",
+                decreasing_line_color="#1565c0",
+                decreasing_fillcolor="#1565c0",
             ),
             row=1,
             col=1,
@@ -496,7 +577,7 @@ def create_price_chart(
 
     if "Volume" in chart_data.columns:
         volume_colors = [
-            "#ef5350" if close >= open_price else "#2962ff"
+            "#e53935" if close >= open_price else "#1565c0"
             for close, open_price in zip(
                 chart_data["Close"],
                 chart_data["Open"],
@@ -567,6 +648,7 @@ def create_rsi_chart(data, stock_name):
     figure.add_hline(
         y=70,
         line_dash="dash",
+        line_color="#e53935",
         annotation_text="과매수 기준 70",
         annotation_position="top left",
     )
@@ -574,6 +656,7 @@ def create_rsi_chart(data, stock_name):
     figure.add_hline(
         y=30,
         line_dash="dash",
+        line_color="#1565c0",
         annotation_text="과매도 기준 30",
         annotation_position="bottom left",
     )
@@ -856,21 +939,19 @@ with overview_tab:
                 summary = get_price_summary(stock_data)
 
                 if summary is None:
-                    st.metric(
-                        label=stock_name,
+                    show_colored_price_metric(
+                        label=f"{stock_name} · {ticker}",
                         value="데이터 없음",
                     )
                 else:
-                    st.metric(
+                    show_colored_price_metric(
                         label=f"{stock_name} · {ticker}",
                         value=format_price(
                             summary["current_price"],
                             currency,
                         ),
-                        delta=(
-                            f'{summary["price_change"]:,.2f} '
-                            f'({summary["change_percent"]:+.2f}%)'
-                        ),
+                        change=summary["price_change"],
+                        change_percent=summary["change_percent"],
                     )
 
     st.divider()
@@ -968,17 +1049,16 @@ with detail_tab:
         if summary is not None:
             metric_columns = st.columns(5)
 
-            metric_columns[0].metric(
-                "현재 가격",
-                format_price(
-                    summary["current_price"],
-                    selected_currency,
-                ),
-                (
-                    f'{summary["price_change"]:,.2f} '
-                    f'({summary["change_percent"]:+.2f}%)'
-                ),
-            )
+            with metric_columns[0]:
+                show_colored_price_metric(
+                    label="현재 가격",
+                    value=format_price(
+                        summary["current_price"],
+                        selected_currency,
+                    ),
+                    change=summary["price_change"],
+                    change_percent=summary["change_percent"],
+                )
 
             metric_columns[1].metric(
                 "기간 최고가",
