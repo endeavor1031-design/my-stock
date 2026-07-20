@@ -6,7 +6,7 @@ from plotly.subplots import make_subplots
 
 
 # =========================================================
-# 페이지 기본 설정
+# Streamlit 기본 설정
 # =========================================================
 st.set_page_config(
     page_title="글로벌 주요 주식 대시보드",
@@ -16,8 +16,7 @@ st.set_page_config(
 
 
 # =========================================================
-# 종목 정보
-# Yahoo Finance 티커 기준
+# 종목 목록
 # =========================================================
 STOCKS = {
     # 한국
@@ -36,13 +35,13 @@ STOCKS = {
         "market": "한국",
         "currency": "KRW",
     },
-    "현대차": {
-        "ticker": "005380.KS",
+    "NAVER": {
+        "ticker": "035420.KS",
         "market": "한국",
         "currency": "KRW",
     },
-    "NAVER": {
-        "ticker": "035420.KS",
+    "현대차": {
+        "ticker": "005380.KS",
         "market": "한국",
         "currency": "KRW",
     },
@@ -155,7 +154,7 @@ INTERVAL_OPTIONS = {
 
 
 # =========================================================
-# 스타일
+# CSS
 # =========================================================
 st.markdown(
     """
@@ -167,15 +166,46 @@ st.markdown(
     }
 
     .sub-title {
-        color: #777;
+        color: #777777;
         margin-bottom: 1.5rem;
     }
 
-    .stock-card {
-        border: 1px solid rgba(128, 128, 128, 0.25);
+    .market-card {
+        min-height: 150px;
+        border: 1px solid rgba(128, 128, 128, 0.28);
         border-radius: 14px;
-        padding: 16px;
-        margin-bottom: 10px;
+        padding: 17px 16px;
+        margin-bottom: 14px;
+        background-color: rgba(128, 128, 128, 0.04);
+    }
+
+    .market-card-name {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+
+    .market-card-ticker {
+        color: #888888;
+        font-size: 0.78rem;
+        margin-bottom: 12px;
+    }
+
+    .market-card-price {
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .market-card-change {
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .market-card-error {
+        color: #777777;
+        font-size: 0.85rem;
+        margin-top: 5px;
     }
 
     div[data-testid="stMetric"] {
@@ -190,96 +220,167 @@ st.markdown(
 
 
 # =========================================================
-# 공통 함수
+# 데이터 정리 함수
 # =========================================================
-@st.cache_data(ttl=600, show_spinner=False)
-def download_stock_data(ticker, period="1y", interval="1d"):
-    """
-    Yahoo Finance에서 개별 종목 데이터를 가져옵니다.
-    결과는 10분 동안 캐시됩니다.
-    """
-    data = yf.download(
-        ticker,
-        period=period,
-        interval=interval,
-        auto_adjust=False,
-        progress=False,
-        threads=False,
-    )
-
+def clean_stock_data(data, ticker):
     if data is None or data.empty:
         return pd.DataFrame()
 
-    # yfinance 버전에 따라 단일 티커도 MultiIndex가 반환될 수 있음
+    data = data.copy()
+
     if isinstance(data.columns, pd.MultiIndex):
-        if ticker in data.columns.get_level_values(-1):
-            try:
-                data = data.xs(ticker, axis=1, level=-1)
-            except KeyError:
+        try:
+            if ticker in data.columns.get_level_values(-1):
+                data = data.xs(
+                    ticker,
+                    axis=1,
+                    level=-1,
+                )
+            else:
                 data.columns = data.columns.get_level_values(0)
-        else:
+        except (KeyError, ValueError):
             data.columns = data.columns.get_level_values(0)
 
-    data = data.copy()
-    data.index = pd.to_datetime(data.index)
-
-    # 중복된 열 이름 제거
     data = data.loc[:, ~data.columns.duplicated()]
+
+    try:
+        data.index = pd.to_datetime(data.index)
+    except Exception:
+        return pd.DataFrame()
+
+    try:
+        data.index = data.index.tz_localize(None)
+    except (TypeError, AttributeError):
+        pass
+
+    if "Close" not in data.columns:
+        return pd.DataFrame()
+
+    data = data.dropna(
+        subset=["Close"],
+        how="all",
+    )
 
     return data
 
 
+# =========================================================
+# 개별 종목 다운로드
+# =========================================================
 @st.cache_data(ttl=600, show_spinner=False)
-def download_comparison_data(tickers, period="1y"):
+def download_stock_data(
+    ticker,
+    period="1y",
+    interval="1d",
+):
     """
-    여러 종목의 수정주가 또는 종가 데이터를 가져옵니다.
+    1차: yf.Ticker().history()
+    2차: yf.download()
+    3차: 최근 1개월 일봉 재시도
     """
-    data = yf.download(
-        tickers=tickers,
-        period=period,
-        interval="1d",
-        auto_adjust=False,
-        progress=False,
-        group_by="column",
-        threads=True,
-    )
 
-    if data is None or data.empty:
+    try:
+        stock = yf.Ticker(ticker)
+
+        data = stock.history(
+            period=period,
+            interval=interval,
+            auto_adjust=False,
+            actions=False,
+            repair=True,
+            timeout=20,
+        )
+
+        data = clean_stock_data(data, ticker)
+
+        if not data.empty:
+            return data
+
+    except Exception:
+        pass
+
+    try:
+        data = yf.download(
+            tickers=ticker,
+            period=period,
+            interval=interval,
+            auto_adjust=False,
+            progress=False,
+            threads=False,
+            timeout=20,
+            repair=True,
+        )
+
+        data = clean_stock_data(data, ticker)
+
+        if not data.empty:
+            return data
+
+    except Exception:
+        pass
+
+    try:
+        stock = yf.Ticker(ticker)
+
+        data = stock.history(
+            period="1mo",
+            interval="1d",
+            auto_adjust=False,
+            actions=False,
+            repair=True,
+            timeout=20,
+        )
+
+        data = clean_stock_data(data, ticker)
+
+        if not data.empty:
+            return data
+
+    except Exception:
+        pass
+
+    return pd.DataFrame()
+
+
+# =========================================================
+# 비교 데이터 다운로드
+# =========================================================
+@st.cache_data(ttl=600, show_spinner=False)
+def download_comparison_data(
+    tickers,
+    period="1y",
+):
+    result = pd.DataFrame()
+
+    for ticker in tickers:
+        data = download_stock_data(
+            ticker=ticker,
+            period=period,
+            interval="1d",
+        )
+
+        if not data.empty and "Close" in data.columns:
+            result[ticker] = data["Close"]
+
+    if result.empty:
         return pd.DataFrame()
 
-    close_data = pd.DataFrame()
+    result.index = pd.to_datetime(result.index)
+    result = result.sort_index()
 
-    if isinstance(data.columns, pd.MultiIndex):
-        first_level = data.columns.get_level_values(0)
-
-        if "Adj Close" in first_level:
-            close_data = data["Adj Close"].copy()
-        elif "Close" in first_level:
-            close_data = data["Close"].copy()
-    else:
-        if "Adj Close" in data.columns:
-            close_data = data[["Adj Close"]].copy()
-            close_data.columns = tickers[:1]
-        elif "Close" in data.columns:
-            close_data = data[["Close"]].copy()
-            close_data.columns = tickers[:1]
-
-    if isinstance(close_data, pd.Series):
-        close_data = close_data.to_frame()
-
-    close_data.index = pd.to_datetime(close_data.index)
-
-    return close_data.dropna(how="all")
+    return result.dropna(how="all")
 
 
+# =========================================================
+# 숫자 처리 함수
+# =========================================================
 def safe_number(value, default=None):
-    """
-    None, NaN 등의 값을 안전하게 처리합니다.
-    """
     try:
         if value is None or pd.isna(value):
             return default
+
         return float(value)
+
     except (TypeError, ValueError):
         return default
 
@@ -299,56 +400,65 @@ def format_price(value, currency):
     return f"${value:,.2f}"
 
 
-def format_large_number(value, currency=""):
+def format_large_number(value):
     value = safe_number(value)
 
     if value is None:
         return "-"
 
-    absolute_value = abs(value)
+    if abs(value) >= 1_000_000_000_000:
+        return f"{value / 1_000_000_000_000:,.2f}조"
 
-    if absolute_value >= 1_000_000_000_000:
-        number = value / 1_000_000_000_000
-        unit = "조"
-    elif absolute_value >= 100_000_000:
-        number = value / 100_000_000
-        unit = "억"
-    elif absolute_value >= 10_000:
-        number = value / 10_000
-        unit = "만"
-    else:
-        return f"{value:,.0f}"
+    if abs(value) >= 100_000_000:
+        return f"{value / 100_000_000:,.2f}억"
 
-    currency_symbol = {
-        "KRW": "₩",
-        "USD": "$",
-        "JPY": "¥",
-    }.get(currency, "")
+    if abs(value) >= 10_000:
+        return f"{value / 10_000:,.2f}만"
 
-    return f"{currency_symbol}{number:,.2f}{unit}"
+    return f"{value:,.0f}"
 
 
+# =========================================================
+# 지표 계산
+# =========================================================
 def calculate_indicators(data):
-    """
-    이동평균선과 RSI를 계산합니다.
-    """
     result = data.copy()
 
-    result["MA20"] = result["Close"].rolling(window=20).mean()
-    result["MA60"] = result["Close"].rolling(window=60).mean()
-    result["MA120"] = result["Close"].rolling(window=120).mean()
+    result["MA20"] = result["Close"].rolling(
+        window=20
+    ).mean()
+
+    result["MA60"] = result["Close"].rolling(
+        window=60
+    ).mean()
+
+    result["MA120"] = result["Close"].rolling(
+        window=120
+    ).mean()
 
     price_change = result["Close"].diff()
+
     gain = price_change.clip(lower=0)
     loss = -price_change.clip(upper=0)
 
-    average_gain = gain.rolling(window=14).mean()
-    average_loss = loss.rolling(window=14).mean()
+    average_gain = gain.rolling(
+        window=14
+    ).mean()
 
-    relative_strength = average_gain / average_loss.replace(0, float("nan"))
-    result["RSI"] = 100 - (100 / (1 + relative_strength))
+    average_loss = loss.rolling(
+        window=14
+    ).mean()
 
-    # 손실 평균이 0이면 RSI를 100으로 처리
+    relative_strength = (
+        average_gain
+        / average_loss.replace(0, float("nan"))
+    )
+
+    result["RSI"] = (
+        100
+        - (100 / (1 + relative_strength))
+    )
+
     result.loc[
         (average_loss == 0) & (average_gain > 0),
         "RSI",
@@ -379,17 +489,31 @@ def get_price_summary(data):
     price_change = current_price - previous_price
 
     if previous_price != 0:
-        change_percent = price_change / previous_price * 100
+        change_percent = (
+            price_change / previous_price * 100
+        )
     else:
         change_percent = 0
 
-    period_high = safe_number(data["High"].max()) if "High" in data else None
-    period_low = safe_number(data["Low"].min()) if "Low" in data else None
+    period_high = (
+        safe_number(data["High"].max())
+        if "High" in data.columns
+        else None
+    )
 
-    if "Volume" in data:
-        average_volume = safe_number(data["Volume"].tail(20).mean())
-    else:
-        average_volume = None
+    period_low = (
+        safe_number(data["Low"].min())
+        if "Low" in data.columns
+        else None
+    )
+
+    average_volume = (
+        safe_number(
+            data["Volume"].tail(20).mean()
+        )
+        if "Volume" in data.columns
+        else None
+    )
 
     return {
         "current_price": current_price,
@@ -402,6 +526,91 @@ def get_price_summary(data):
     }
 
 
+# =========================================================
+# 주요 종목 카드
+# 상승 빨강 / 하락 파랑
+# =========================================================
+def show_market_card(
+    stock_name,
+    ticker,
+    summary,
+    currency,
+):
+    if summary is None:
+        st.markdown(
+            f"""
+            <div class="market-card">
+                <div class="market-card-name">
+                    {stock_name}
+                </div>
+
+                <div class="market-card-ticker">
+                    {ticker}
+                </div>
+
+                <div class="market-card-price">
+                    데이터 조회 실패
+                </div>
+
+                <div class="market-card-error">
+                    새로고침 후 다시 확인해 주세요.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        return
+
+    current_price = summary["current_price"]
+    price_change = summary["price_change"]
+    change_percent = summary["change_percent"]
+
+    if change_percent > 0:
+        color = "#e53935"
+        arrow = "▲"
+
+    elif change_percent < 0:
+        color = "#1565c0"
+        arrow = "▼"
+
+    else:
+        color = "#777777"
+        arrow = "―"
+
+    st.markdown(
+        f"""
+        <div class="market-card">
+            <div class="market-card-name">
+                {stock_name}
+            </div>
+
+            <div class="market-card-ticker">
+                {ticker}
+            </div>
+
+            <div class="market-card-price">
+                {format_price(current_price, currency)}
+            </div>
+
+            <div
+                class="market-card-change"
+                style="color: {color};"
+            >
+                {arrow}
+                {abs(price_change):,.2f}
+                ({abs(change_percent):.2f}%)
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# =========================================================
+# 가격 차트
+# 상승 빨강 / 하락 파랑
+# =========================================================
 def create_price_chart(
     data,
     stock_name,
@@ -410,9 +619,6 @@ def create_price_chart(
     show_ma60,
     show_ma120,
 ):
-    """
-    가격과 거래량을 함께 보여주는 Plotly 차트입니다.
-    """
     chart_data = calculate_indicators(data)
 
     figure = make_subplots(
@@ -422,7 +628,7 @@ def create_price_chart(
         vertical_spacing=0.04,
         row_heights=[0.74, 0.26],
         subplot_titles=(
-            f"{stock_name} 가격",
+            f"{stock_name} 주가",
             "거래량",
         ),
     )
@@ -435,13 +641,20 @@ def create_price_chart(
                 high=chart_data["High"],
                 low=chart_data["Low"],
                 close=chart_data["Close"],
-                name="OHLC",
-                increasing_line_color="#ef5350",
-                decreasing_line_color="#2962ff",
+                name="주가",
+
+                # 상승 빨강
+                increasing_line_color="#e53935",
+                increasing_fillcolor="#e53935",
+
+                # 하락 파랑
+                decreasing_line_color="#1565c0",
+                decreasing_fillcolor="#1565c0",
             ),
             row=1,
             col=1,
         )
+
     else:
         figure.add_trace(
             go.Scatter(
@@ -449,7 +662,9 @@ def create_price_chart(
                 y=chart_data["Close"],
                 mode="lines",
                 name="종가",
-                line=dict(width=2),
+                line=dict(
+                    width=2,
+                ),
             ),
             row=1,
             col=1,
@@ -494,9 +709,14 @@ def create_price_chart(
             col=1,
         )
 
-    if "Volume" in chart_data.columns:
+    if (
+        "Volume" in chart_data.columns
+        and "Open" in chart_data.columns
+    ):
         volume_colors = [
-            "#ef5350" if close >= open_price else "#2962ff"
+            "#e53935"
+            if close >= open_price
+            else "#1565c0"
             for close, open_price in zip(
                 chart_data["Close"],
                 chart_data["Open"],
@@ -509,7 +729,7 @@ def create_price_chart(
                 y=chart_data["Volume"],
                 name="거래량",
                 marker_color=volume_colors,
-                opacity=0.65,
+                opacity=0.7,
             ),
             row=2,
             col=1,
@@ -517,7 +737,12 @@ def create_price_chart(
 
     figure.update_layout(
         height=680,
-        margin=dict(l=20, r=20, t=70, b=20),
+        margin=dict(
+            l=20,
+            r=20,
+            t=70,
+            b=20,
+        ),
         hovermode="x unified",
         legend=dict(
             orientation="h",
@@ -549,7 +774,13 @@ def create_price_chart(
     return figure
 
 
-def create_rsi_chart(data, stock_name):
+# =========================================================
+# RSI 차트
+# =========================================================
+def create_rsi_chart(
+    data,
+    stock_name,
+):
     chart_data = calculate_indicators(data)
 
     figure = go.Figure()
@@ -567,14 +798,16 @@ def create_rsi_chart(data, stock_name):
     figure.add_hline(
         y=70,
         line_dash="dash",
-        annotation_text="과매수 기준 70",
+        line_color="#e53935",
+        annotation_text="과매수 70",
         annotation_position="top left",
     )
 
     figure.add_hline(
         y=30,
         line_dash="dash",
-        annotation_text="과매도 기준 30",
+        line_color="#1565c0",
+        annotation_text="과매도 30",
         annotation_position="bottom left",
     )
 
@@ -587,17 +820,27 @@ def create_rsi_chart(data, stock_name):
         ),
         xaxis_title="날짜",
         hovermode="x unified",
-        margin=dict(l=20, r=20, t=60, b=20),
+        margin=dict(
+            l=20,
+            r=20,
+            t=60,
+            b=20,
+        ),
     )
 
     return figure
 
 
-def create_comparison_chart(close_data, ticker_to_name):
-    """
-    시작일을 100으로 놓고 종목별 누적 수익률을 비교합니다.
-    """
-    normalized = pd.DataFrame(index=close_data.index)
+# =========================================================
+# 상대 수익률 비교 차트
+# =========================================================
+def create_comparison_chart(
+    close_data,
+    ticker_to_name,
+):
+    normalized = pd.DataFrame(
+        index=close_data.index
+    )
 
     for ticker in close_data.columns:
         series = close_data[ticker].dropna()
@@ -605,7 +848,13 @@ def create_comparison_chart(close_data, ticker_to_name):
         if series.empty:
             continue
 
-        normalized[ticker] = close_data[ticker] / series.iloc[0] * 100
+        first_price = series.iloc[0]
+
+        normalized[ticker] = (
+            close_data[ticker]
+            / first_price
+            * 100
+        )
 
     figure = go.Figure()
 
@@ -615,7 +864,10 @@ def create_comparison_chart(close_data, ticker_to_name):
                 x=normalized.index,
                 y=normalized[ticker],
                 mode="lines",
-                name=ticker_to_name.get(ticker, ticker),
+                name=ticker_to_name.get(
+                    ticker,
+                    ticker,
+                ),
                 line=dict(width=2),
             )
         )
@@ -623,14 +875,14 @@ def create_comparison_chart(close_data, ticker_to_name):
     figure.add_hline(
         y=100,
         line_dash="dash",
-        annotation_text="비교 시작점",
+        annotation_text="시작점",
         annotation_position="bottom right",
     )
 
     figure.update_layout(
         title="종목별 상대 수익률 비교",
         xaxis_title="날짜",
-        yaxis_title="기준가 100",
+        yaxis_title="시작가 100",
         height=580,
         hovermode="x unified",
         legend=dict(
@@ -640,13 +892,24 @@ def create_comparison_chart(close_data, ticker_to_name):
             xanchor="left",
             x=0,
         ),
-        margin=dict(l=20, r=20, t=80, b=20),
+        margin=dict(
+            l=20,
+            r=20,
+            t=80,
+            b=20,
+        ),
     )
 
-    return figure, normalized
+    return figure
 
 
-def create_performance_table(close_data, ticker_to_name):
+# =========================================================
+# 성과 비교표
+# =========================================================
+def create_performance_table(
+    close_data,
+    ticker_to_name,
+):
     rows = []
 
     for ticker in close_data.columns:
@@ -655,36 +918,62 @@ def create_performance_table(close_data, ticker_to_name):
         if len(series) < 2:
             continue
 
-        start_price = safe_number(series.iloc[0])
-        current_price = safe_number(series.iloc[-1])
-        highest_price = safe_number(series.max())
-        lowest_price = safe_number(series.min())
+        start_price = safe_number(
+            series.iloc[0]
+        )
 
-        if start_price is None or current_price is None or start_price == 0:
+        current_price = safe_number(
+            series.iloc[-1]
+        )
+
+        if (
+            start_price is None
+            or current_price is None
+            or start_price == 0
+        ):
             continue
 
-        return_rate = (current_price / start_price - 1) * 100
+        return_rate = (
+            current_price / start_price - 1
+        ) * 100
 
-        daily_return = series.pct_change().dropna()
-
-        volatility = (
-            daily_return.std() * (252 ** 0.5) * 100
-            if not daily_return.empty
-            else None
+        daily_return = (
+            series.pct_change().dropna()
         )
+
+        volatility = None
+
+        if not daily_return.empty:
+            volatility = (
+                daily_return.std()
+                * (252 ** 0.5)
+                * 100
+            )
 
         rows.append(
             {
-                "종목": ticker_to_name.get(ticker, ticker),
+                "종목": ticker_to_name.get(
+                    ticker,
+                    ticker,
+                ),
                 "티커": ticker,
-                "기간 수익률(%)": round(return_rate, 2),
+                "기간 수익률(%)": round(
+                    return_rate,
+                    2,
+                ),
                 "연환산 변동성(%)": (
                     round(volatility, 2)
                     if volatility is not None
                     else None
                 ),
-                "기간 최고가": round(highest_price, 2),
-                "기간 최저가": round(lowest_price, 2),
+                "기간 최고가": round(
+                    series.max(),
+                    2,
+                ),
+                "기간 최저가": round(
+                    series.min(),
+                    2,
+                ),
             }
         )
 
@@ -708,9 +997,11 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class="sub-title">'
-    'Yahoo Finance 데이터와 Plotly를 활용한 글로벌 금융시장 분석'
-    '</div>',
+    """
+    <div class="sub-title">
+        Yahoo Finance 데이터와 Plotly를 활용한 글로벌 시장 분석
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -721,8 +1012,15 @@ st.markdown(
 with st.sidebar:
     st.header("대시보드 설정")
 
-    market_options = ["전체"] + sorted(
-        list({stock["market"] for stock in STOCKS.values()})
+    market_options = [
+        "전체"
+    ] + sorted(
+        list(
+            {
+                information["market"]
+                for information in STOCKS.values()
+            }
+        )
     )
 
     selected_market = st.selectbox(
@@ -731,12 +1029,16 @@ with st.sidebar:
     )
 
     if selected_market == "전체":
-        available_stocks = list(STOCKS.keys())
+        available_stocks = list(
+            STOCKS.keys()
+        )
     else:
         available_stocks = [
             name
-            for name, information in STOCKS.items()
-            if information["market"] == selected_market
+            for name, information
+            in STOCKS.items()
+            if information["market"]
+            == selected_market
         ]
 
     default_stock = (
@@ -748,7 +1050,9 @@ with st.sidebar:
     selected_stock_name = st.selectbox(
         "상세 분석 종목",
         available_stocks,
-        index=available_stocks.index(default_stock),
+        index=available_stocks.index(
+            default_stock
+        ),
     )
 
     selected_period_name = st.selectbox(
@@ -765,7 +1069,10 @@ with st.sidebar:
 
     chart_type = st.radio(
         "차트 유형",
-        ["캔들차트", "라인차트"],
+        [
+            "캔들차트",
+            "라인차트",
+        ],
         horizontal=True,
     )
 
@@ -774,17 +1081,17 @@ with st.sidebar:
     st.subheader("이동평균선")
 
     show_ma20 = st.checkbox(
-        "20일 이동평균선",
+        "20일 이동평균",
         value=True,
     )
 
     show_ma60 = st.checkbox(
-        "60일 이동평균선",
+        "60일 이동평균",
         value=True,
     )
 
     show_ma120 = st.checkbox(
-        "120일 이동평균선",
+        "120일 이동평균",
         value=False,
     )
 
@@ -797,17 +1104,32 @@ with st.sidebar:
         st.cache_data.clear()
         st.rerun()
 
-    st.caption("데이터는 일정 시간 지연될 수 있습니다.")
+    st.caption(
+        "Yahoo Finance 데이터는 일정 시간 지연될 수 있습니다."
+    )
 
 
-selected_ticker = STOCKS[selected_stock_name]["ticker"]
-selected_currency = STOCKS[selected_stock_name]["currency"]
-selected_period = PERIOD_OPTIONS[selected_period_name]
-selected_interval = INTERVAL_OPTIONS[selected_interval_name]
+selected_ticker = (
+    STOCKS[selected_stock_name]["ticker"]
+)
+
+selected_currency = (
+    STOCKS[selected_stock_name]["currency"]
+)
+
+selected_period = (
+    PERIOD_OPTIONS[selected_period_name]
+)
+
+selected_interval = (
+    INTERVAL_OPTIONS[
+        selected_interval_name
+    ]
+)
 
 
 # =========================================================
-# 탭 구성
+# 탭
 # =========================================================
 overview_tab, detail_tab, comparison_tab, data_tab = st.tabs(
     [
@@ -820,7 +1142,7 @@ overview_tab, detail_tab, comparison_tab, data_tab = st.tabs(
 
 
 # =========================================================
-# 1. 시장 현황
+# 시장 현황
 # =========================================================
 with overview_tab:
     st.subheader("주요 종목 현황")
@@ -836,45 +1158,52 @@ with overview_tab:
         "S&P 500",
     ]
 
-    first_row = dashboard_stocks[:4]
-    second_row = dashboard_stocks[4:]
+    for start_index in range(
+        0,
+        len(dashboard_stocks),
+        4,
+    ):
+        row_stocks = dashboard_stocks[
+            start_index:start_index + 4
+        ]
 
-    for row_stocks in [first_row, second_row]:
         columns = st.columns(4)
 
-        for column, stock_name in zip(columns, row_stocks):
-            ticker = STOCKS[stock_name]["ticker"]
-            currency = STOCKS[stock_name]["currency"]
+        for column, stock_name in zip(
+            columns,
+            row_stocks,
+        ):
+            ticker = (
+                STOCKS[stock_name]["ticker"]
+            )
+
+            currency = (
+                STOCKS[stock_name]["currency"]
+            )
 
             with column:
                 stock_data = download_stock_data(
                     ticker=ticker,
-                    period="5d",
+                    period="1mo",
                     interval="1d",
                 )
 
-                summary = get_price_summary(stock_data)
+                summary = get_price_summary(
+                    stock_data
+                )
 
-                if summary is None:
-                    st.metric(
-                        label=stock_name,
-                        value="데이터 없음",
-                    )
-                else:
-                    st.metric(
-                        label=f"{stock_name} · {ticker}",
-                        value=format_price(
-                            summary["current_price"],
-                            currency,
-                        ),
-                        delta=(
-                            f'{summary["price_change"]:,.2f} '
-                            f'({summary["change_percent"]:+.2f}%)'
-                        ),
-                    )
+                show_market_card(
+                    stock_name=stock_name,
+                    ticker=ticker,
+                    summary=summary,
+                    currency=currency,
+                )
 
     st.divider()
-    st.subheader("필수 종목 상대 수익률")
+
+    st.subheader(
+        "필수 종목 1년 상대 수익률"
+    )
 
     essential_names = [
         "SK하이닉스",
@@ -888,53 +1217,69 @@ with overview_tab:
         for name in essential_names
     ]
 
-    ticker_to_name = {
+    essential_ticker_to_name = {
         STOCKS[name]["ticker"]: name
         for name in essential_names
     }
 
-    with st.spinner("필수 종목 데이터를 불러오는 중입니다."):
-        comparison_data = download_comparison_data(
-            essential_tickers,
-            period="1y",
+    with st.spinner(
+        "필수 종목 데이터를 불러오는 중입니다."
+    ):
+        essential_data = (
+            download_comparison_data(
+                tickers=essential_tickers,
+                period="1y",
+            )
         )
 
-    if comparison_data.empty:
-        st.warning("필수 종목의 비교 데이터를 불러오지 못했습니다.")
+    if essential_data.empty:
+        st.warning(
+            "비교 데이터를 불러오지 못했습니다."
+        )
+
     else:
-        # 요청 순서에 맞춰 가능한 열만 정리
-        valid_columns = [
-            ticker
-            for ticker in essential_tickers
-            if ticker in comparison_data.columns
-        ]
-
-        comparison_data = comparison_data[valid_columns]
-
-        figure, normalized_data = create_comparison_chart(
-            comparison_data,
-            ticker_to_name,
+        comparison_figure = (
+            create_comparison_chart(
+                close_data=essential_data,
+                ticker_to_name=(
+                    essential_ticker_to_name
+                ),
+            )
         )
 
         st.plotly_chart(
-            figure,
+            comparison_figure,
             use_container_width=True,
         )
 
-        performance_table = create_performance_table(
-            comparison_data,
-            ticker_to_name,
+        performance_table = (
+            create_performance_table(
+                close_data=essential_data,
+                ticker_to_name=(
+                    essential_ticker_to_name
+                ),
+            )
         )
 
         st.dataframe(
             performance_table,
             use_container_width=True,
             hide_index=True,
+            column_config={
+                "기간 수익률(%)":
+                    st.column_config.NumberColumn(
+                        format="%.2f%%"
+                    ),
+                "연환산 변동성(%)":
+                    st.column_config.NumberColumn(
+                        format="%.2f%%"
+                    ),
+            },
         )
 
 
 # =========================================================
-# 2. 종목 상세 분석
+# 종목 상세 분석
 # =========================================================
 with detail_tab:
     st.subheader(
@@ -943,7 +1288,8 @@ with detail_tab:
 
     st.caption(
         f"티커: {selected_ticker} · "
-        f"시장: {STOCKS[selected_stock_name]['market']} · "
+        f"시장: "
+        f"{STOCKS[selected_stock_name]['market']} · "
         f"기간: {selected_period_name} · "
         f"간격: {selected_interval_name}"
     )
@@ -960,13 +1306,25 @@ with detail_tab:
     if detail_data.empty:
         st.error(
             "주가 데이터를 불러오지 못했습니다. "
-            "잠시 후 다시 시도하거나 다른 기간을 선택해 주세요."
+            "데이터 새로고침 버튼을 눌러 다시 시도해 주세요."
         )
+
     else:
-        summary = get_price_summary(detail_data)
+        summary = get_price_summary(
+            detail_data
+        )
 
         if summary is not None:
             metric_columns = st.columns(5)
+
+            change_percent = (
+                summary["change_percent"]
+            )
+
+            price_delta = (
+                f'{summary["price_change"]:+,.2f} '
+                f'({change_percent:+.2f}%)'
+            )
 
             metric_columns[0].metric(
                 "현재 가격",
@@ -974,10 +1332,7 @@ with detail_tab:
                     summary["current_price"],
                     selected_currency,
                 ),
-                (
-                    f'{summary["price_change"]:,.2f} '
-                    f'({summary["change_percent"]:+.2f}%)'
-                ),
+                price_delta,
             )
 
             metric_columns[1].metric(
@@ -1003,11 +1358,18 @@ with detail_tab:
                 ),
             )
 
-            period_return = (
-                detail_data["Close"].iloc[-1]
-                / detail_data["Close"].dropna().iloc[0]
-                - 1
-            ) * 100
+            close_series = (
+                detail_data["Close"].dropna()
+            )
+
+            if len(close_series) >= 2:
+                period_return = (
+                    close_series.iloc[-1]
+                    / close_series.iloc[0]
+                    - 1
+                ) * 100
+            else:
+                period_return = 0
 
             metric_columns[4].metric(
                 "조회 기간 수익률",
@@ -1030,14 +1392,18 @@ with detail_tab:
 
         st.subheader("기술적 분석")
 
-        indicator_data = calculate_indicators(detail_data)
-
-        latest_rsi = safe_number(
-            indicator_data["RSI"].iloc[-1]
+        indicator_data = (
+            calculate_indicators(
+                detail_data
+            )
         )
 
         latest_close = safe_number(
             indicator_data["Close"].iloc[-1]
+        )
+
+        latest_rsi = safe_number(
+            indicator_data["RSI"].iloc[-1]
         )
 
         latest_ma20 = safe_number(
@@ -1052,10 +1418,13 @@ with detail_tab:
 
         if latest_rsi is None:
             rsi_status = "계산 데이터 부족"
+
         elif latest_rsi >= 70:
             rsi_status = "과매수 구간"
+
         elif latest_rsi <= 30:
             rsi_status = "과매도 구간"
+
         else:
             rsi_status = "중립 구간"
 
@@ -1070,12 +1439,19 @@ with detail_tab:
             delta_color="off",
         )
 
-        if latest_close is not None and latest_ma20 is not None:
+        if (
+            latest_close is not None
+            and latest_ma20 is not None
+            and latest_ma20 != 0
+        ):
             ma20_difference = (
-                latest_close / latest_ma20 - 1
+                latest_close / latest_ma20
+                - 1
             ) * 100
 
-            ma20_text = f"{ma20_difference:+.2f}%"
+            ma20_text = (
+                f"{ma20_difference:+.2f}%"
+            )
         else:
             ma20_text = "-"
 
@@ -1084,12 +1460,19 @@ with detail_tab:
             ma20_text,
         )
 
-        if latest_close is not None and latest_ma60 is not None:
+        if (
+            latest_close is not None
+            and latest_ma60 is not None
+            and latest_ma60 != 0
+        ):
             ma60_difference = (
-                latest_close / latest_ma60 - 1
+                latest_close / latest_ma60
+                - 1
             ) * 100
 
-            ma60_text = f"{ma60_difference:+.2f}%"
+            ma60_text = (
+                f"{ma60_difference:+.2f}%"
+            )
         else:
             ma60_text = "-"
 
@@ -1099,8 +1482,8 @@ with detail_tab:
         )
 
         rsi_figure = create_rsi_chart(
-            detail_data,
-            selected_stock_name,
+            data=detail_data,
+            stock_name=selected_stock_name,
         )
 
         st.plotly_chart(
@@ -1110,14 +1493,16 @@ with detail_tab:
 
 
 # =========================================================
-# 3. 수익률 비교
+# 수익률 비교
 # =========================================================
 with comparison_tab:
-    st.subheader("종목별 수익률 비교")
+    st.subheader(
+        "종목별 수익률 비교"
+    )
 
     st.write(
-        "서로 다른 통화와 가격 수준을 가진 종목을 비교하기 위해 "
-        "조회 시작일 가격을 100으로 환산합니다."
+        "서로 다른 통화와 가격을 비교하기 위해 "
+        "각 종목의 시작일 가격을 100으로 환산합니다."
     )
 
     default_comparison = [
@@ -1129,54 +1514,64 @@ with comparison_tab:
         "S&P 500",
     ]
 
-    selected_comparison_names = st.multiselect(
-        "비교할 종목을 선택하세요",
-        options=list(STOCKS.keys()),
-        default=default_comparison,
-        max_selections=10,
+    selected_comparison_names = (
+        st.multiselect(
+            "비교할 종목",
+            options=list(STOCKS.keys()),
+            default=default_comparison,
+            max_selections=10,
+        )
     )
 
-    comparison_period_name = st.selectbox(
-        "비교 기간",
-        list(PERIOD_OPTIONS.keys()),
-        index=3,
-        key="comparison_period",
+    comparison_period_name = (
+        st.selectbox(
+            "비교 기간",
+            list(PERIOD_OPTIONS.keys()),
+            index=3,
+            key="comparison_period",
+        )
     )
 
     if len(selected_comparison_names) < 2:
-        st.info("비교를 위해 종목을 2개 이상 선택해 주세요.")
+        st.info(
+            "비교할 종목을 2개 이상 선택해 주세요."
+        )
+
     else:
         comparison_tickers = [
             STOCKS[name]["ticker"]
-            for name in selected_comparison_names
+            for name
+            in selected_comparison_names
         ]
 
-        comparison_ticker_to_name = {
+        ticker_to_name = {
             STOCKS[name]["ticker"]: name
-            for name in selected_comparison_names
+            for name
+            in selected_comparison_names
         }
 
-        with st.spinner("비교 데이터를 불러오는 중입니다."):
-            close_data = download_comparison_data(
-                tickers=comparison_tickers,
-                period=PERIOD_OPTIONS[comparison_period_name],
+        with st.spinner(
+            "비교 데이터를 불러오는 중입니다."
+        ):
+            comparison_data = (
+                download_comparison_data(
+                    tickers=comparison_tickers,
+                    period=PERIOD_OPTIONS[
+                        comparison_period_name
+                    ],
+                )
             )
 
-        if close_data.empty:
-            st.error("비교 데이터를 불러오지 못했습니다.")
+        if comparison_data.empty:
+            st.error(
+                "비교 데이터를 불러오지 못했습니다."
+            )
+
         else:
-            ordered_columns = [
-                ticker
-                for ticker in comparison_tickers
-                if ticker in close_data.columns
-            ]
-
-            close_data = close_data[ordered_columns]
-
-            comparison_figure, normalized_data = (
+            comparison_figure = (
                 create_comparison_chart(
-                    close_data,
-                    comparison_ticker_to_name,
+                    close_data=comparison_data,
+                    ticker_to_name=ticker_to_name,
                 )
             )
 
@@ -1187,9 +1582,11 @@ with comparison_tab:
 
             st.subheader("기간 성과 요약")
 
-            performance_table = create_performance_table(
-                close_data,
-                comparison_ticker_to_name,
+            performance_table = (
+                create_performance_table(
+                    close_data=comparison_data,
+                    ticker_to_name=ticker_to_name,
+                )
             )
 
             st.dataframe(
@@ -1197,21 +1594,25 @@ with comparison_tab:
                 use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "기간 수익률(%)": st.column_config.NumberColumn(
-                        format="%.2f%%"
-                    ),
-                    "연환산 변동성(%)": st.column_config.NumberColumn(
-                        format="%.2f%%"
-                    ),
+                    "기간 수익률(%)":
+                        st.column_config.NumberColumn(
+                            format="%.2f%%"
+                        ),
+                    "연환산 변동성(%)":
+                        st.column_config.NumberColumn(
+                            format="%.2f%%"
+                        ),
                 },
             )
 
 
 # =========================================================
-# 4. 원본 데이터
+# 원본 데이터
 # =========================================================
 with data_tab:
-    st.subheader(f"{selected_stock_name} 원본 주가 데이터")
+    st.subheader(
+        f"{selected_stock_name} 원본 데이터"
+    )
 
     raw_data = download_stock_data(
         ticker=selected_ticker,
@@ -1220,11 +1621,20 @@ with data_tab:
     )
 
     if raw_data.empty:
-        st.warning("표시할 데이터가 없습니다.")
+        st.warning(
+            "표시할 데이터가 없습니다."
+        )
+
     else:
         display_data = raw_data.copy()
+
         display_data.index.name = "날짜"
-        display_data = display_data.sort_index(ascending=False)
+
+        display_data = (
+            display_data.sort_index(
+                ascending=False
+            )
+        )
 
         available_columns = [
             column
@@ -1236,10 +1646,13 @@ with data_tab:
                 "Adj Close",
                 "Volume",
             ]
-            if column in display_data.columns
+            if column
+            in display_data.columns
         ]
 
-        display_data = display_data[available_columns]
+        display_data = display_data[
+            available_columns
+        ]
 
         st.dataframe(
             display_data,
@@ -1253,7 +1666,9 @@ with data_tab:
         st.download_button(
             label="CSV 파일 다운로드",
             data=csv_data,
-            file_name=f"{selected_ticker}_stock_data.csv",
+            file_name=(
+                f"{selected_ticker}_stock_data.csv"
+            ),
             mime="text/csv",
         )
 
@@ -1264,7 +1679,7 @@ with data_tab:
 st.divider()
 
 st.caption(
-    "본 대시보드는 정보 제공 및 학습 목적으로 제작되었습니다. "
+    "본 대시보드는 학습 및 정보 제공 목적으로 제작되었습니다. "
     "Yahoo Finance 데이터는 실시간 거래소 데이터와 차이가 있거나 "
-    "일정 시간 지연될 수 있으며, 투자 판단의 근거로만 사용해서는 안 됩니다."
+    "지연될 수 있습니다."
 )
