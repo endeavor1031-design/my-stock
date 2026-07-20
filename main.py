@@ -9,7 +9,7 @@ from plotly.subplots import make_subplots
 # 페이지 기본 설정
 # =========================================================
 st.set_page_config(
-    page_title="글로벌 주요 주식 대시보드",
+    page_title="hani.inc 글로벌 주요 주식 대시보드",
     page_icon="📈",
     layout="wide",
 )
@@ -160,54 +160,290 @@ INTERVAL_OPTIONS = {
 st.markdown(
     """
     <style>
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 0.2rem;
+    html, body, [data-testid="stAppViewContainer"] {
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255, 85, 120, 0.16), transparent 22%),
+            radial-gradient(circle at 88% 16%, rgba(72, 120, 255, 0.16), transparent 24%),
+            radial-gradient(circle at 78% 72%, rgba(131, 56, 236, 0.12), transparent 22%),
+            linear-gradient(135deg, #f8fbff 0%, #eef4ff 38%, #f8f3ff 100%);
     }
 
-    .sub-title {
-        color: #777;
-        margin-bottom: 1.5rem;
+    [data-testid="stHeader"] {
+        background: rgba(0, 0, 0, 0);
     }
 
-    .stock-card {
-        border: 1px solid rgba(128, 128, 128, 0.25);
-        border-radius: 14px;
-        padding: 16px;
-        margin-bottom: 10px;
+    [data-testid="stSidebar"] {
+        background:
+            linear-gradient(
+                180deg,
+                rgba(255,255,255,0.90) 0%,
+                rgba(245,248,255,0.92) 100%
+            );
+        border-right: 1px solid rgba(100, 120, 180, 0.15);
+        backdrop-filter: blur(12px);
     }
 
-    .price-metric-card {
-        border: 1px solid rgba(128, 128, 128, 0.20);
-        border-radius: 12px;
-        padding: 12px;
-        min-height: 112px;
-        margin-bottom: 10px;
-        background-color: rgba(128, 128, 128, 0.03);
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
     }
 
-    .price-metric-label {
-        font-size: 0.88rem;
-        color: #777777;
-        margin-bottom: 7px;
+    .hero-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: 26px;
+        padding: 28px 30px;
+        margin-bottom: 22px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(16, 24, 64, 0.95) 0%,
+                rgba(53, 72, 171, 0.92) 45%,
+                rgba(108, 54, 194, 0.90) 100%
+            );
+        box-shadow: 0 20px 42px rgba(43, 63, 140, 0.20);
+        border: 1px solid rgba(255,255,255,0.12);
     }
 
-    .price-metric-value {
-        font-size: 1.45rem;
-        font-weight: 800;
+    .hero-wrap::before {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        right: -90px;
+        top: -90px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.22), rgba(255,255,255,0.02));
+    }
+
+    .hero-wrap::after {
+        content: "";
+        position: absolute;
+        width: 240px;
+        height: 240px;
+        left: -70px;
+        bottom: -70px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 99, 132, 0.18), rgba(255,255,255,0.02));
+    }
+
+    .hero-topline {
+        color: rgba(255,255,255,0.80);
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .hero-grid {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 2;
+    }
+
+    .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .brand-logo {
+        width: 78px;
+        height: 78px;
+        border-radius: 22px;
+        position: relative;
+        background:
+            linear-gradient(135deg, #ff5f6d 0%, #ffc371 45%, #6c63ff 100%);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+        flex-shrink: 0;
+    }
+
+    .brand-logo::before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.18);
+        backdrop-filter: blur(6px);
+    }
+
+    .brand-logo::after {
+        content: "h";
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.35rem;
+        font-weight: 900;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.20);
+    }
+
+    .brand-text {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .brand-name {
+        font-size: 2.25rem;
+        line-height: 1.05;
+        font-weight: 900;
+        color: #ffffff;
+        margin: 0;
+    }
+
+    .brand-sub {
+        color: rgba(255,255,255,0.76);
+        font-size: 0.98rem;
+        margin: 0;
+    }
+
+    .hero-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+    }
+
+    .hero-badge {
+        padding: 8px 14px;
+        border-radius: 999px;
+        color: white;
+        font-size: 0.84rem;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: rgba(255,255,255,0.10);
+        backdrop-filter: blur(8px);
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .hero-stat-box {
+        min-width: 138px;
+        padding: 14px 15px;
+        border-radius: 18px;
+        color: white;
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.16);
+        backdrop-filter: blur(10px);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+
+    .hero-stat-label {
+        font-size: 0.80rem;
+        color: rgba(255,255,255,0.70);
         margin-bottom: 4px;
     }
 
+    .hero-stat-value {
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: #ffffff;
+    }
+
+    .panel-card {
+        border-radius: 22px;
+        padding: 18px;
+        margin-bottom: 14px;
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(140, 160, 210, 0.18);
+        box-shadow: 0 12px 28px rgba(69, 85, 150, 0.08);
+        backdrop-filter: blur(14px);
+    }
+
+    .section-title {
+        font-size: 1.45rem;
+        font-weight: 850;
+        color: #18213d;
+        margin-bottom: 10px;
+    }
+
+    .stock-card {
+        border: 1px solid rgba(128, 128, 128, 0.20);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 10px;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,0.85), rgba(246,249,255,0.82));
+        box-shadow: 0 10px 18px rgba(70, 90, 160, 0.08);
+        backdrop-filter: blur(12px);
+    }
+
+    .price-metric-card {
+        border: 1px solid rgba(128, 128, 128, 0.14);
+        border-radius: 16px;
+        padding: 14px;
+        min-height: 118px;
+        margin-bottom: 10px;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,0.88), rgba(245,248,255,0.82));
+        box-shadow: 0 10px 22px rgba(74, 96, 170, 0.08);
+        backdrop-filter: blur(12px);
+    }
+
+    .price-metric-label {
+        font-size: 0.90rem;
+        color: #667085;
+        margin-bottom: 7px;
+        font-weight: 700;
+    }
+
+    .price-metric-value {
+        font-size: 1.48rem;
+        font-weight: 850;
+        margin-bottom: 4px;
+        color: #18213d;
+    }
+
     .price-metric-delta {
-        font-size: 0.88rem;
-        font-weight: 750;
+        font-size: 0.90rem;
+        font-weight: 800;
     }
 
     div[data-testid="stMetric"] {
-        border: 1px solid rgba(128, 128, 128, 0.20);
-        border-radius: 12px;
+        border: 1px solid rgba(128, 128, 128, 0.14);
+        border-radius: 16px;
         padding: 12px;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,0.86), rgba(244,247,255,0.82));
+        box-shadow: 0 8px 20px rgba(80, 95, 150, 0.06);
+    }
+
+    [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+
+    [data-baseweb="tab"] {
+        background: rgba(255,255,255,0.65);
+        border-radius: 999px;
+        padding: 10px 18px;
+        border: 1px solid rgba(140, 160, 210, 0.14);
+    }
+
+    [data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(90deg, #ff5f6d 0%, #6c63ff 100%);
+        color: white;
+    }
+
+    .footer-note {
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.70);
+        border: 1px solid rgba(140, 160, 210, 0.16);
+        color: #4a5568;
+        font-size: 0.93rem;
+        box-shadow: 0 8px 18px rgba(80, 95, 150, 0.05);
     }
     </style>
     """,
@@ -325,59 +561,6 @@ def format_price(value, currency):
     return f"${value:,.2f}"
 
 
-def show_colored_price_metric(
-    label,
-    value,
-    change=None,
-    change_percent=None,
-):
-    """
-    한국 주식시장 색상 기준:
-    상승 = 빨간색
-    하락 = 파란색
-    보합 = 회색
-    """
-    if change_percent is None:
-        color = "#777777"
-        arrow = "―"
-        delta_text = ""
-    elif change_percent > 0:
-        color = "#e53935"
-        arrow = "▲"
-        delta_text = (
-            f"{arrow} {abs(change):,.2f} "
-            f"({abs(change_percent):.2f}%)"
-        )
-    elif change_percent < 0:
-        color = "#1565c0"
-        arrow = "▼"
-        delta_text = (
-            f"{arrow} {abs(change):,.2f} "
-            f"({abs(change_percent):.2f}%)"
-        )
-    else:
-        color = "#777777"
-        arrow = "―"
-        delta_text = (
-            f"{arrow} 0.00 (0.00%)"
-        )
-
-    html = (
-        f'<div class="price-metric-card">'
-        f'<div class="price-metric-label">{label}</div>'
-        f'<div class="price-metric-value">{value}</div>'
-        f'<div class="price-metric-delta" style="color:{color};">'
-        f'{delta_text}'
-        f'</div>'
-        f'</div>'
-    )
-
-    st.markdown(
-        html,
-        unsafe_allow_html=True,
-    )
-
-
 def format_large_number(value, currency=""):
     value = safe_number(value)
 
@@ -405,6 +588,57 @@ def format_large_number(value, currency=""):
     }.get(currency, "")
 
     return f"{currency_symbol}{number:,.2f}{unit}"
+
+
+def show_colored_price_metric(
+    label,
+    value,
+    change=None,
+    change_percent=None,
+):
+    """
+    한국 주식시장 기준 색상:
+    상승 = 빨간색
+    하락 = 파란색
+    보합 = 회색
+    """
+    if change_percent is None:
+        color = "#777777"
+        arrow = "―"
+        delta_text = ""
+    elif change_percent > 0:
+        color = "#e53935"
+        arrow = "▲"
+        delta_text = (
+            f"{arrow} {abs(change):,.2f} "
+            f"({abs(change_percent):.2f}%)"
+        )
+    elif change_percent < 0:
+        color = "#1565c0"
+        arrow = "▼"
+        delta_text = (
+            f"{arrow} {abs(change):,.2f} "
+            f"({abs(change_percent):.2f}%)"
+        )
+    else:
+        color = "#777777"
+        arrow = "―"
+        delta_text = "― 0.00 (0.00%)"
+
+    html = (
+        f'<div class="price-metric-card">'
+        f'<div class="price-metric-label">{label}</div>'
+        f'<div class="price-metric-value">{value}</div>'
+        f'<div class="price-metric-delta" style="color:{color};">'
+        f'{delta_text}'
+        f'</div>'
+        f'</div>'
+    )
+
+    st.markdown(
+        html,
+        unsafe_allow_html=True,
+    )
 
 
 def calculate_indicators(data):
@@ -530,7 +764,10 @@ def create_price_chart(
                 y=chart_data["Close"],
                 mode="lines",
                 name="종가",
-                line=dict(width=2),
+                line=dict(
+                    width=2.4,
+                    color="#4f46e5",
+                ),
             ),
             row=1,
             col=1,
@@ -543,7 +780,7 @@ def create_price_chart(
                 y=chart_data["MA20"],
                 mode="lines",
                 name="20일 이동평균",
-                line=dict(width=1.4),
+                line=dict(width=1.5, color="#ff5f6d"),
             ),
             row=1,
             col=1,
@@ -556,7 +793,7 @@ def create_price_chart(
                 y=chart_data["MA60"],
                 mode="lines",
                 name="60일 이동평균",
-                line=dict(width=1.4),
+                line=dict(width=1.5, color="#6c63ff"),
             ),
             row=1,
             col=1,
@@ -569,7 +806,7 @@ def create_price_chart(
                 y=chart_data["MA120"],
                 mode="lines",
                 name="120일 이동평균",
-                line=dict(width=1.4),
+                line=dict(width=1.5, color="#00bcd4"),
             ),
             row=1,
             col=1,
@@ -590,7 +827,7 @@ def create_price_chart(
                 y=chart_data["Volume"],
                 name="거래량",
                 marker_color=volume_colors,
-                opacity=0.65,
+                opacity=0.70,
             ),
             row=2,
             col=1,
@@ -608,6 +845,9 @@ def create_price_chart(
             x=0,
         ),
         xaxis_rangeslider_visible=False,
+        paper_bgcolor="rgba(255,255,255,0)",
+        plot_bgcolor="rgba(255,255,255,0.70)",
+        font=dict(color="#18213d"),
     )
 
     figure.update_xaxes(
@@ -619,12 +859,14 @@ def create_price_chart(
         title_text="가격",
         row=1,
         col=1,
+        gridcolor="rgba(80, 100, 180, 0.10)",
     )
 
     figure.update_yaxes(
         title_text="거래량",
         row=2,
         col=1,
+        gridcolor="rgba(80, 100, 180, 0.10)",
     )
 
     return figure
@@ -641,7 +883,7 @@ def create_rsi_chart(data, stock_name):
             y=chart_data["RSI"],
             mode="lines",
             name="RSI",
-            line=dict(width=2),
+            line=dict(width=2.2, color="#6c63ff"),
         )
     )
 
@@ -667,10 +909,14 @@ def create_rsi_chart(data, stock_name):
         yaxis=dict(
             title="RSI",
             range=[0, 100],
+            gridcolor="rgba(80, 100, 180, 0.10)",
         ),
         xaxis_title="날짜",
         hovermode="x unified",
         margin=dict(l=20, r=20, t=60, b=20),
+        paper_bgcolor="rgba(255,255,255,0)",
+        plot_bgcolor="rgba(255,255,255,0.70)",
+        font=dict(color="#18213d"),
     )
 
     return figure
@@ -682,6 +928,19 @@ def create_comparison_chart(close_data, ticker_to_name):
     """
     normalized = pd.DataFrame(index=close_data.index)
 
+    line_palette = [
+        "#ff5f6d",
+        "#6c63ff",
+        "#00bcd4",
+        "#ff9800",
+        "#00c853",
+        "#7c4dff",
+        "#ef5350",
+        "#1565c0",
+        "#f06292",
+        "#26a69a",
+    ]
+
     for ticker in close_data.columns:
         series = close_data[ticker].dropna()
 
@@ -692,20 +951,24 @@ def create_comparison_chart(close_data, ticker_to_name):
 
     figure = go.Figure()
 
-    for ticker in normalized.columns:
+    for idx, ticker in enumerate(normalized.columns):
         figure.add_trace(
             go.Scatter(
                 x=normalized.index,
                 y=normalized[ticker],
                 mode="lines",
                 name=ticker_to_name.get(ticker, ticker),
-                line=dict(width=2),
+                line=dict(
+                    width=2.5,
+                    color=line_palette[idx % len(line_palette)],
+                ),
             )
         )
 
     figure.add_hline(
         y=100,
         line_dash="dash",
+        line_color="rgba(70, 80, 120, 0.45)",
         annotation_text="비교 시작점",
         annotation_position="bottom right",
     )
@@ -724,6 +987,13 @@ def create_comparison_chart(close_data, ticker_to_name):
             x=0,
         ),
         margin=dict(l=20, r=20, t=80, b=20),
+        paper_bgcolor="rgba(255,255,255,0)",
+        plot_bgcolor="rgba(255,255,255,0.70)",
+        font=dict(color="#18213d"),
+    )
+
+    figure.update_yaxes(
+        gridcolor="rgba(80, 100, 180, 0.10)",
     )
 
     return figure, normalized
@@ -783,17 +1053,51 @@ def create_performance_table(close_data, ticker_to_name):
 
 
 # =========================================================
-# 제목
+# 헤더
 # =========================================================
 st.markdown(
-    '<div class="main-title">📈 글로벌 주요 주식 대시보드</div>',
-    unsafe_allow_html=True,
-)
+    """
+    <div class="hero-wrap">
+        <div class="hero-topline">hani.inc · premium market intelligence</div>
 
-st.markdown(
-    '<div class="sub-title">'
-    'Yahoo Finance 데이터와 Plotly를 활용한 글로벌 금융시장 분석'
-    '</div>',
+        <div class="hero-grid">
+            <div>
+                <div class="brand-wrap">
+                    <div class="brand-logo"></div>
+
+                    <div class="brand-text">
+                        <div class="brand-name">hani.inc</div>
+                        <div class="brand-sub">
+                            글로벌 주요 주식 대시보드 · Yahoo Finance + Plotly 기반 스마트 분석
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-badges">
+                    <div class="hero-badge">Global Equities</div>
+                    <div class="hero-badge">AI Stocks</div>
+                    <div class="hero-badge">Market Monitoring</div>
+                    <div class="hero-badge">Interactive Analytics</div>
+                </div>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-stat-box">
+                    <div class="hero-stat-label">Tracked Assets</div>
+                    <div class="hero-stat-value">20+</div>
+                </div>
+                <div class="hero-stat-box">
+                    <div class="hero-stat-label">Core Markets</div>
+                    <div class="hero-stat-value">KR · US · JP · EU</div>
+                </div>
+                <div class="hero-stat-box">
+                    <div class="hero-stat-label">Dashboard Style</div>
+                    <div class="hero-stat-value">Gradient Glass</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -906,7 +1210,7 @@ overview_tab, detail_tab, comparison_tab, data_tab = st.tabs(
 # 1. 시장 현황
 # =========================================================
 with overview_tab:
-    st.subheader("주요 종목 현황")
+    st.markdown('<div class="section-title">주요 종목 현황</div>', unsafe_allow_html=True)
 
     dashboard_stocks = [
         "SK하이닉스",
@@ -955,7 +1259,7 @@ with overview_tab:
                     )
 
     st.divider()
-    st.subheader("필수 종목 상대 수익률")
+    st.markdown('<div class="section-title">필수 종목 상대 수익률</div>', unsafe_allow_html=True)
 
     essential_names = [
         "SK하이닉스",
@@ -983,7 +1287,6 @@ with overview_tab:
     if comparison_data.empty:
         st.warning("필수 종목의 비교 데이터를 불러오지 못했습니다.")
     else:
-        # 요청 순서에 맞춰 가능한 열만 정리
         valid_columns = [
             ticker
             for ticker in essential_tickers
@@ -1018,8 +1321,9 @@ with overview_tab:
 # 2. 종목 상세 분석
 # =========================================================
 with detail_tab:
-    st.subheader(
-        f"{selected_stock_name} 상세 분석"
+    st.markdown(
+        f'<div class="section-title">{selected_stock_name} 상세 분석</div>',
+        unsafe_allow_html=True,
     )
 
     st.caption(
@@ -1108,7 +1412,7 @@ with detail_tab:
             use_container_width=True,
         )
 
-        st.subheader("기술적 분석")
+        st.markdown('<div class="section-title">기술적 분석</div>', unsafe_allow_html=True)
 
         indicator_data = calculate_indicators(detail_data)
 
@@ -1154,7 +1458,6 @@ with detail_tab:
             ma20_difference = (
                 latest_close / latest_ma20 - 1
             ) * 100
-
             ma20_text = f"{ma20_difference:+.2f}%"
         else:
             ma20_text = "-"
@@ -1168,7 +1471,6 @@ with detail_tab:
             ma60_difference = (
                 latest_close / latest_ma60 - 1
             ) * 100
-
             ma60_text = f"{ma60_difference:+.2f}%"
         else:
             ma60_text = "-"
@@ -1193,7 +1495,7 @@ with detail_tab:
 # 3. 수익률 비교
 # =========================================================
 with comparison_tab:
-    st.subheader("종목별 수익률 비교")
+    st.markdown('<div class="section-title">종목별 수익률 비교</div>', unsafe_allow_html=True)
 
     st.write(
         "서로 다른 통화와 가격 수준을 가진 종목을 비교하기 위해 "
@@ -1265,7 +1567,7 @@ with comparison_tab:
                 use_container_width=True,
             )
 
-            st.subheader("기간 성과 요약")
+            st.markdown('<div class="section-title">기간 성과 요약</div>', unsafe_allow_html=True)
 
             performance_table = create_performance_table(
                 close_data,
@@ -1291,7 +1593,10 @@ with comparison_tab:
 # 4. 원본 데이터
 # =========================================================
 with data_tab:
-    st.subheader(f"{selected_stock_name} 원본 주가 데이터")
+    st.markdown(
+        f'<div class="section-title">{selected_stock_name} 원본 주가 데이터</div>',
+        unsafe_allow_html=True,
+    )
 
     raw_data = download_stock_data(
         ticker=selected_ticker,
@@ -1343,8 +1648,14 @@ with data_tab:
 # =========================================================
 st.divider()
 
-st.caption(
-    "본 대시보드는 정보 제공 및 학습 목적으로 제작되었습니다. "
-    "Yahoo Finance 데이터는 실시간 거래소 데이터와 차이가 있거나 "
-    "일정 시간 지연될 수 있으며, 투자 판단의 근거로만 사용해서는 안 됩니다."
+st.markdown(
+    """
+    <div class="footer-note">
+        <strong>hani.inc notice</strong><br>
+        본 대시보드는 정보 제공 및 학습 목적으로 제작되었습니다.
+        Yahoo Finance 데이터는 실시간 거래소 데이터와 차이가 있거나
+        일정 시간 지연될 수 있으며, 투자 판단의 유일한 근거로 사용해서는 안 됩니다.
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
