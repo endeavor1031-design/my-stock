@@ -177,9 +177,29 @@ body,
     background: transparent;
 }
 
-/* 기본 Streamlit 멀티페이지 메뉴 숨김 */
+/* 기본 Streamlit 멀티페이지 메뉴 유지 */
 [data-testid="stSidebarNav"] {
-    display: none !important;
+    display: block !important;
+    order: 2;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+/* 사이드바 내부를 순서 조정 가능한 세로 레이아웃으로 구성 */
+[data-testid="stSidebar"] > div:first-child {
+    display: flex;
+    flex-direction: column;
+    background: transparent !important;
+}
+
+/* 브랜드 영역은 가장 위 */
+[data-testid="stSidebar"] .hani-brand-wrapper {
+    order: 1;
+}
+
+/* 브랜드 아래의 일반 설정 영역 */
+[data-testid="stSidebar"] .sidebar-settings-wrapper {
+    order: 3;
 }
 
 /* 사이드바 전체 그라데이션 */
@@ -197,10 +217,6 @@ body,
             #bf344e 100%
         ) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-[data-testid="stSidebar"] > div:first-child {
-    background: transparent !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
@@ -374,35 +390,6 @@ body,
     line-height: 1.5;
 }
 
-/* 사용자 정의 페이지 메뉴 */
-.sidebar-menu-title {
-    color: rgba(255, 255, 255, 0.70);
-    font-size: 0.70rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    margin: 5px 0 8px 4px;
-}
-
-[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] {
-    border-radius: 13px;
-    margin: 3px 0;
-    padding: 9px 11px;
-    background: rgba(255, 255, 255, 0.075);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    transition: all 0.18s ease;
-}
-
-[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"]:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.28);
-    transform: translateX(3px);
-}
-
-[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] p {
-    color: #ffffff !important;
-    font-weight: 700;
-}
-
 /* 사이드바 설정 제목 */
 .sidebar-settings-title {
     color: #ffffff;
@@ -513,6 +500,58 @@ div[data-testid="stMetric"] {
     color: #4a5568;
     font-size: 0.93rem;
 }
+
+/* 기본 멀티페이지 메뉴를 디자인에 맞게 꾸밈 */
+[data-testid="stSidebarNav"]::before {
+    content: "NAVIGATION";
+    display: block;
+    margin: 2px 0 8px 4px;
+    color: rgba(255, 255, 255, 0.70);
+    font-size: 0.70rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+[data-testid="stSidebarNav"] ul {
+    padding-left: 0;
+}
+
+[data-testid="stSidebarNav"] li {
+    margin-bottom: 4px;
+}
+
+[data-testid="stSidebarNav"] a {
+    border-radius: 13px;
+    padding: 9px 11px;
+    background: rgba(255, 255, 255, 0.075);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    transition: all 0.18s ease;
+}
+
+[data-testid="stSidebarNav"] a:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateX(3px);
+}
+
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(239, 62, 74, 0.48),
+            rgba(108, 99, 255, 0.48),
+            rgba(21, 101, 192, 0.48)
+        );
+    border-color: rgba(255, 255, 255, 0.30);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+[data-testid="stSidebarNav"] a span,
+[data-testid="stSidebarNav"] a p {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
 </style>
     """,
     unsafe_allow_html=True,
@@ -1140,6 +1179,11 @@ st.markdown(
 # 사이드바
 # =========================================================
 with st.sidebar:
+    st.markdown(
+        '<div class="hani-brand-wrapper">',
+        unsafe_allow_html=True,
+    )
+
     brand_html = (
         '<div class="hani-brand">'
         '<div class="hani-brand-row">'
@@ -1152,10 +1196,10 @@ with st.sidebar:
         '<stop offset="100%" stop-color="#dbe8ff"/>'
         '</linearGradient>'
         '</defs>'
-        '<path d="M25 72V29M25 51H50M50 29V72" fill="none" stroke="url(#logoStroke)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
-        '<path d="M60 68L69 55L77 61L87 42" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>'
-        '<circle cx="87" cy="42" r="5" fill="#ffdf7e"/>'
-        '<circle cx="69" cy="55" r="4" fill="#ff7b91"/>'
+        '<path d="M20 72V28M20 51H46M46 28V72" fill="none" stroke="url(#logoStroke)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<path d="M58 69L68 55L77 61L89 40" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<circle cx="89" cy="40" r="5" fill="#ffdf7e"/>'
+        '<circle cx="68" cy="55" r="4" fill="#ff7b91"/>'
         '</svg>'
         '</div>'
         '</div>'
@@ -1178,42 +1222,14 @@ with st.sidebar:
     )
 
     st.markdown(
-        '<div class="sidebar-menu-title">NAVIGATION</div>',
+        '</div>',
         unsafe_allow_html=True,
     )
 
-    st.page_link(
-        "main.py",
-        label="메인 대시보드",
-        icon="📊",
+    st.markdown(
+        '<div class="sidebar-settings-wrapper">',
+        unsafe_allow_html=True,
     )
-    st.page_link(
-        "pages/1_AI_반도체_전문분석.py",
-        label="AI 반도체 주식",
-        icon="🧠",
-    )
-    st.page_link(
-        "pages/2_tomorrow_stock_forecast.py",
-        label="내일 예상 주식",
-        icon="🔮",
-    )
-    st.page_link(
-        "pages/3_week_stock_forecast.py",
-        label="일주일 뒤 예상 주식",
-        icon="📅",
-    )
-    st.page_link(
-        "pages/4_month_stock_forecast.py",
-        label="1달 뒤 예상 주식",
-        icon="🗓️",
-    )
-    st.page_link(
-        "pages/5_buy_candidate_screener.py",
-        label="매수 추천 종목",
-        icon="🏆",
-    )
-
-    st.divider()
 
     st.markdown(
         '<div class="sidebar-settings-title">대시보드 설정</div>',
@@ -1298,6 +1314,11 @@ with st.sidebar:
 
     st.caption(
         "Yahoo Finance 데이터는 일정 시간 지연될 수 있습니다."
+    )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True,
     )
 
 
