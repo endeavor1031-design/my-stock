@@ -159,287 +159,361 @@ INTERVAL_OPTIONS = {
 # =========================================================
 st.markdown(
     """
-    <style>
-    html, body, [data-testid="stAppViewContainer"] {
-        background:
-            linear-gradient(
-                180deg,
-                #fbfcff 0%,
-                #f5f7fb 100%
-            );
-    }
+<style>
+:root {
+    --up-color: #ef3e4a;
+    --down-color: #1565c0;
+    --sidebar-text: #ffffff;
+    --sidebar-muted: rgba(255, 255, 255, 0.72);
+}
 
-    [data-testid="stHeader"] {
-        background: rgba(0, 0, 0, 0);
-    }
+html,
+body,
+[data-testid="stAppViewContainer"] {
+    background: linear-gradient(180deg, #fbfcff 0%, #f4f6fb 100%);
+}
 
-    [data-testid="stSidebar"] {
-        background:
-            linear-gradient(
-                180deg,
-                rgba(255,255,255,0.90) 0%,
-                rgba(245,248,255,0.92) 100%
-            );
-        border-right: 1px solid rgba(100, 120, 180, 0.15);
-        backdrop-filter: blur(12px);
-    }
+[data-testid="stHeader"] {
+    background: transparent;
+}
 
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
+/* 기본 Streamlit 멀티페이지 메뉴 숨김 */
+[data-testid="stSidebarNav"] {
+    display: none !important;
+}
 
-    .sidebar-brand {
-        position: relative;
-        overflow: hidden;
-        border-radius: 22px;
-        padding: 20px 16px;
-        margin: 4px 0 22px 0;
-        background:
-            linear-gradient(
-                145deg,
-                rgba(17, 24, 64, 0.98) 0%,
-                rgba(58, 74, 180, 0.96) 52%,
-                rgba(117, 53, 198, 0.94) 100%
-            );
-        box-shadow: 0 16px 30px rgba(45, 60, 145, 0.23);
-        border: 1px solid rgba(255,255,255,0.13);
-    }
+/* 사이드바 전체 그라데이션 */
+[data-testid="stSidebar"] {
+    background:
+        radial-gradient(circle at 20% 10%, rgba(255, 104, 132, 0.36), transparent 25%),
+        radial-gradient(circle at 85% 24%, rgba(94, 125, 255, 0.38), transparent 28%),
+        radial-gradient(circle at 22% 82%, rgba(255, 71, 87, 0.30), transparent 26%),
+        linear-gradient(
+            165deg,
+            #091536 0%,
+            #132b68 30%,
+            #34319a 58%,
+            #732e9e 78%,
+            #bf344e 100%
+        ) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+}
 
-    .sidebar-brand::before {
-        content: "";
-        position: absolute;
-        width: 150px;
-        height: 150px;
-        right: -65px;
-        top: -65px;
-        border-radius: 50%;
-        background:
-            radial-gradient(
-                circle,
-                rgba(255,255,255,0.30),
-                rgba(255,255,255,0.02) 70%
-            );
-    }
+[data-testid="stSidebar"] > div:first-child {
+    background: transparent !important;
+}
 
-    .sidebar-brand::after {
-        content: "";
-        position: absolute;
-        width: 115px;
-        height: 115px;
-        left: -50px;
-        bottom: -55px;
-        border-radius: 35px;
-        transform: rotate(28deg);
-        background:
-            linear-gradient(
-                135deg,
-                rgba(255, 86, 125, 0.36),
-                rgba(255, 195, 113, 0.10)
-            );
-    }
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] span {
+    color: var(--sidebar-text);
+}
 
-    .sidebar-logo-row {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+/* 입력 위젯 */
+[data-testid="stSidebar"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-baseweb="input"] > div,
+[data-testid="stSidebar"] div[role="radiogroup"] {
+    background: rgba(255, 255, 255, 0.93);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 12px;
+}
 
-    .sidebar-logo {
-        position: relative;
-        width: 58px;
-        height: 58px;
-        flex-shrink: 0;
-        border-radius: 17px;
-        background:
-            linear-gradient(
-                135deg,
-                #ff5f6d 0%,
-                #ffc371 42%,
-                #6c63ff 100%
-            );
-        box-shadow: 0 10px 24px rgba(0,0,0,0.23);
-    }
+[data-testid="stSidebar"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-baseweb="select"] svg,
+[data-testid="stSidebar"] [data-baseweb="input"] input,
+[data-testid="stSidebar"] div[role="radiogroup"] label p {
+    color: #17213d !important;
+}
 
-    .sidebar-logo::before {
-        content: "";
-        position: absolute;
-        inset: 8px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.17);
-        border: 1px solid rgba(255,255,255,0.18);
-    }
+[data-testid="stSidebar"] hr {
+    border-color: rgba(255, 255, 255, 0.20);
+}
 
-    .sidebar-logo::after {
-        content: "h";
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.85rem;
-        font-weight: 900;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.20);
-    }
+/* 회사 브랜드 카드 */
+.hani-brand {
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    padding: 18px;
+    margin: 0 0 15px 0;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.18) 0%,
+            rgba(255, 255, 255, 0.07) 100%
+        );
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow:
+        0 18px 36px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(16px);
+}
 
-    .sidebar-company {
-        color: white;
-        font-size: 1.42rem;
-        line-height: 1.05;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-    }
+.hani-brand::before {
+    content: "";
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    right: -88px;
+    top: -98px;
+    border-radius: 50%;
+    background:
+        radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.40) 0%,
+            rgba(255, 255, 255, 0.02) 68%
+        );
+}
 
-    .sidebar-company-sub {
-        margin-top: 4px;
-        color: rgba(255,255,255,0.72);
-        font-size: 0.72rem;
-        font-weight: 650;
-        letter-spacing: 0.02em;
-    }
+.hani-brand::after {
+    content: "";
+    position: absolute;
+    width: 125px;
+    height: 125px;
+    left: -65px;
+    bottom: -74px;
+    border-radius: 40px;
+    transform: rotate(30deg);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 73, 104, 0.75),
+            rgba(255, 171, 86, 0.14)
+        );
+}
 
-    .sidebar-divider-line {
-        position: relative;
-        z-index: 2;
-        height: 1px;
-        margin: 15px 0 12px 0;
-        background:
-            linear-gradient(
-                90deg,
-                transparent,
-                rgba(255,255,255,0.38),
-                transparent
-            );
-    }
+.hani-brand-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
 
-    .sidebar-badges {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
+.hani-logo-shell {
+    width: 70px;
+    height: 70px;
+    min-width: 70px;
+    border-radius: 21px;
+    padding: 1px;
+    background:
+        linear-gradient(
+            135deg,
+            #ff4d67 0%,
+            #ffae57 35%,
+            #765cff 68%,
+            #3f7cff 100%
+        );
+    box-shadow:
+        0 13px 28px rgba(0, 0, 0, 0.30),
+        0 0 24px rgba(122, 92, 255, 0.30);
+}
 
-    .sidebar-badge {
-        padding: 5px 8px;
-        border-radius: 999px;
-        color: white;
-        font-size: 0.65rem;
-        font-weight: 700;
-        background: rgba(255,255,255,0.11);
-        border: 1px solid rgba(255,255,255,0.15);
-        backdrop-filter: blur(7px);
-    }
+.hani-logo-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.24),
+            rgba(255, 255, 255, 0.07)
+        );
+    border: 1px solid rgba(255, 255, 255, 0.24);
+}
 
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 850;
-        margin-bottom: 0.15rem;
-        color: #18213d;
-    }
+.hani-logo-inner svg {
+    width: 55px;
+    height: 55px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.24));
+}
 
-    .sub-title {
-        color: #667085;
-        margin-bottom: 1.4rem;
-    }
+.hani-brand-name {
+    color: #ffffff;
+    font-size: 1.55rem;
+    line-height: 1.04;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+}
 
-    .panel-card {
-        border-radius: 22px;
-        padding: 18px;
-        margin-bottom: 14px;
-        background: rgba(255,255,255,0.72);
-        border: 1px solid rgba(140, 160, 210, 0.18);
-        box-shadow: 0 12px 28px rgba(69, 85, 150, 0.08);
-        backdrop-filter: blur(14px);
-    }
+.hani-brand-subtitle {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.67rem;
+    line-height: 1.3;
+    margin-top: 5px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+}
 
-    .section-title {
-        font-size: 1.45rem;
-        font-weight: 850;
-        color: #18213d;
-        margin-bottom: 10px;
-    }
+.hani-brand-line {
+    position: relative;
+    z-index: 2;
+    height: 1px;
+    margin: 15px 0 11px 0;
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.48),
+            transparent
+        );
+}
 
-    .stock-card {
-        border: 1px solid rgba(128, 128, 128, 0.20);
-        border-radius: 18px;
-        padding: 16px;
-        margin-bottom: 10px;
-        background:
-            linear-gradient(180deg, rgba(255,255,255,0.85), rgba(246,249,255,0.82));
-        box-shadow: 0 10px 18px rgba(70, 90, 160, 0.08);
-        backdrop-filter: blur(12px);
-    }
+.hani-brand-copy {
+    position: relative;
+    z-index: 2;
+    color: rgba(255, 255, 255, 0.79);
+    font-size: 0.73rem;
+    line-height: 1.5;
+}
 
-    .price-metric-card {
-        border: 1px solid rgba(128, 128, 128, 0.14);
-        border-radius: 16px;
-        padding: 14px;
-        min-height: 118px;
-        margin-bottom: 10px;
-        background:
-            linear-gradient(180deg, rgba(255,255,255,0.88), rgba(245,248,255,0.82));
-        box-shadow: 0 10px 22px rgba(74, 96, 170, 0.08);
-        backdrop-filter: blur(12px);
-    }
+/* 사용자 정의 페이지 메뉴 */
+.sidebar-menu-title {
+    color: rgba(255, 255, 255, 0.70);
+    font-size: 0.70rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    margin: 5px 0 8px 4px;
+}
 
-    .price-metric-label {
-        font-size: 0.90rem;
-        color: #667085;
-        margin-bottom: 7px;
-        font-weight: 700;
-    }
+[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] {
+    border-radius: 13px;
+    margin: 3px 0;
+    padding: 9px 11px;
+    background: rgba(255, 255, 255, 0.075);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    transition: all 0.18s ease;
+}
 
-    .price-metric-value {
-        font-size: 1.48rem;
-        font-weight: 850;
-        margin-bottom: 4px;
-        color: #18213d;
-    }
+[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"]:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateX(3px);
+}
 
-    .price-metric-delta {
-        font-size: 0.90rem;
-        font-weight: 800;
-    }
+[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] p {
+    color: #ffffff !important;
+    font-weight: 700;
+}
 
-    div[data-testid="stMetric"] {
-        border: 1px solid rgba(128, 128, 128, 0.14);
-        border-radius: 16px;
-        padding: 12px;
-        background:
-            linear-gradient(180deg, rgba(255,255,255,0.86), rgba(244,247,255,0.82));
-        box-shadow: 0 8px 20px rgba(80, 95, 150, 0.06);
-    }
+/* 사이드바 설정 제목 */
+.sidebar-settings-title {
+    color: #ffffff;
+    font-size: 1.24rem;
+    font-weight: 850;
+    margin: 18px 0 10px 0;
+}
 
-    [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
+/* 본문 */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
 
-    [data-baseweb="tab"] {
-        background: rgba(255,255,255,0.65);
-        border-radius: 999px;
-        padding: 10px 18px;
-        border: 1px solid rgba(140, 160, 210, 0.14);
-    }
+.main-title {
+    font-size: 2.2rem;
+    font-weight: 850;
+    margin-bottom: 0.15rem;
+    color: #18213d;
+}
 
-    [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(90deg, #ff5f6d 0%, #6c63ff 100%);
-        color: white;
-    }
+.sub-title {
+    color: #667085;
+    margin-bottom: 1.4rem;
+}
 
-    .footer-note {
-        padding: 16px 18px;
-        border-radius: 18px;
-        background: rgba(255,255,255,0.70);
-        border: 1px solid rgba(140, 160, 210, 0.16);
-        color: #4a5568;
-        font-size: 0.93rem;
-        box-shadow: 0 8px 18px rgba(80, 95, 150, 0.05);
-    }
-    </style>
+.section-title {
+    font-size: 1.45rem;
+    font-weight: 850;
+    color: #18213d;
+    margin-bottom: 10px;
+}
+
+.price-metric-card {
+    border: 1px solid rgba(128, 128, 128, 0.14);
+    border-radius: 16px;
+    padding: 14px;
+    min-height: 118px;
+    margin-bottom: 10px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.94),
+            rgba(245, 248, 255, 0.88)
+        );
+    box-shadow: 0 10px 22px rgba(74, 96, 170, 0.08);
+}
+
+.price-metric-label {
+    font-size: 0.90rem;
+    color: #667085;
+    margin-bottom: 7px;
+    font-weight: 700;
+}
+
+.price-metric-value {
+    font-size: 1.48rem;
+    font-weight: 850;
+    margin-bottom: 4px;
+    color: #18213d;
+}
+
+.price-metric-delta {
+    font-size: 0.90rem;
+    font-weight: 800;
+}
+
+div[data-testid="stMetric"] {
+    border: 1px solid rgba(128, 128, 128, 0.14);
+    border-radius: 16px;
+    padding: 12px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.94),
+            rgba(244, 247, 255, 0.88)
+        );
+    box-shadow: 0 8px 20px rgba(80, 95, 150, 0.06);
+}
+
+[data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+[data-baseweb="tab"] {
+    background: rgba(255, 255, 255, 0.76);
+    border-radius: 999px;
+    padding: 10px 18px;
+    border: 1px solid rgba(140, 160, 210, 0.14);
+}
+
+[data-baseweb="tab"][aria-selected="true"] {
+    background:
+        linear-gradient(
+            90deg,
+            #ef3e4a 0%,
+            #6c63ff 54%,
+            #1565c0 100%
+        );
+    color: white;
+}
+
+.footer-note {
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(140, 160, 210, 0.16);
+    color: #4a5568;
+    font-size: 0.93rem;
+}
+</style>
     """,
     unsafe_allow_html=True,
 )
@@ -1066,32 +1140,85 @@ st.markdown(
 # 사이드바
 # =========================================================
 with st.sidebar:
+    brand_html = (
+        '<div class="hani-brand">'
+        '<div class="hani-brand-row">'
+        '<div class="hani-logo-shell">'
+        '<div class="hani-logo-inner">'
+        '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="hani.inc logo">'
+        '<defs>'
+        '<linearGradient id="logoStroke" x1="0%" y1="0%" x2="100%" y2="100%">'
+        '<stop offset="0%" stop-color="#ffffff"/>'
+        '<stop offset="100%" stop-color="#dbe8ff"/>'
+        '</linearGradient>'
+        '</defs>'
+        '<path d="M25 72V29M25 51H50M50 29V72" fill="none" stroke="url(#logoStroke)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<path d="M60 68L69 55L77 61L87 42" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>'
+        '<circle cx="87" cy="42" r="5" fill="#ffdf7e"/>'
+        '<circle cx="69" cy="55" r="4" fill="#ff7b91"/>'
+        '</svg>'
+        '</div>'
+        '</div>'
+        '<div>'
+        '<div class="hani-brand-name">hani.inc</div>'
+        '<div class="hani-brand-subtitle">MARKET INTELLIGENCE<br>DATA &amp; ANALYTICS</div>'
+        '</div>'
+        '</div>'
+        '<div class="hani-brand-line"></div>'
+        '<div class="hani-brand-copy">'
+        '글로벌 주식과 AI 반도체 시장을<br>'
+        '한곳에서 분석하는 스마트 대시보드'
+        '</div>'
+        '</div>'
+    )
+
     st.markdown(
-        """
-        <div class="sidebar-brand">
-            <div class="sidebar-logo-row">
-                <div class="sidebar-logo"></div>
-                <div>
-                    <div class="sidebar-company">hani.inc</div>
-                    <div class="sidebar-company-sub">
-                        MARKET INTELLIGENCE
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-divider-line"></div>
-
-            <div class="sidebar-badges">
-                <div class="sidebar-badge">GLOBAL</div>
-                <div class="sidebar-badge">STOCKS</div>
-                <div class="sidebar-badge">ANALYTICS</div>
-            </div>
-        </div>
-        """,
+        brand_html,
         unsafe_allow_html=True,
     )
 
-    st.header("대시보드 설정")
+    st.markdown(
+        '<div class="sidebar-menu-title">NAVIGATION</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.page_link(
+        "main.py",
+        label="메인 대시보드",
+        icon="📊",
+    )
+    st.page_link(
+        "pages/1_AI_반도체_전문분석.py",
+        label="AI 반도체 주식",
+        icon="🧠",
+    )
+    st.page_link(
+        "pages/2_tomorrow_stock_forecast.py",
+        label="내일 예상 주식",
+        icon="🔮",
+    )
+    st.page_link(
+        "pages/3_week_stock_forecast.py",
+        label="일주일 뒤 예상 주식",
+        icon="📅",
+    )
+    st.page_link(
+        "pages/4_month_stock_forecast.py",
+        label="1달 뒤 예상 주식",
+        icon="🗓️",
+    )
+    st.page_link(
+        "pages/5_buy_candidate_screener.py",
+        label="매수 추천 종목",
+        icon="🏆",
+    )
+
+    st.divider()
+
+    st.markdown(
+        '<div class="sidebar-settings-title">대시보드 설정</div>',
+        unsafe_allow_html=True,
+    )
 
     market_options = ["전체"] + sorted(
         list({stock["market"] for stock in STOCKS.values()})
@@ -1169,7 +1296,9 @@ with st.sidebar:
         st.cache_data.clear()
         st.rerun()
 
-    st.caption("데이터는 일정 시간 지연될 수 있습니다.")
+    st.caption(
+        "Yahoo Finance 데이터는 일정 시간 지연될 수 있습니다."
+    )
 
 
 selected_ticker = STOCKS[selected_stock_name]["ticker"]
